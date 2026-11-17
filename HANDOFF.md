@@ -199,8 +199,8 @@ Open problems, to solve in Phase C and show Scott:
 Do not copy data from the Naowh Forever addon. Its own content is all rights
 reserved; only its bundled libraries are MIT. It is the addon Scott uses in
 game, so use it as the check: for Nachtwald at level 32 on 2026-11-17 its
-Dungeon Journal showed these quest counts, and ours should match once we know
-what the two numbers mean (ask Scott; probably done or in log, out of total):
+Dungeon Journal showed these quest counts (completed out of total), and ours
+should match:
 Blackfathom Deeps 0/6, Excavation Site: Wetlands 8/9, Gnomeregan 1/11, City
 of Dalaran 3/4, The Stockade shown as complete.
 
@@ -280,13 +280,16 @@ Each phase ends with something a friend can use. Stop after each one.
 Mobile layout, empty states, "updated 2h ago" stamps, and a README covering
 setup, how a friend adds a character, the passphrase, and the data credits.
 
-## Questions to ask Scott first
+## Answered questions
 
-1. What do the two numbers in the Naowh journal's quest counts mean?
-2. Forever has new races and may have new classes. Should class colours
-   fall back to plain text for any class not in the theme list?
-3. For the level line: how many levels apart is "too far"?
-4. Should removing a character be undoable for a short time, or final?
+1. Naowh journal counts are completed quests out of the total for that
+   dungeon. A quest only in the log does not count as done.
+2. Classes not in the theme list show in plain text.
+3. Level line: flag anyone more than 5 levels from the group. Once Phase B
+   has dungeon ranges, "too far" may move to "no dungeon fits both".
+4. Removing a character is final, after a confirmation.
+5. Character pages use `character.html?c=<region>/<slug>`. The roster cards
+   stay on the front page below the level line.
 
 ## Theme: "Forever Roster"
 
