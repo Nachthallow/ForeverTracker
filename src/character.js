@@ -1,5 +1,17 @@
 // Character page: character.html?c=<region>/<slug>
-import { db, el, fullName, callSync, passphrase, characterCard, PASSPHRASE_NOTE, SUMMARY_COLUMNS } from "./lib.js";
+import {
+  db,
+  el,
+  fullName,
+  characterUrl,
+  callSync,
+  passphrase,
+  characterCard,
+  loadPlayers,
+  fillPlayerList,
+  PASSPHRASE_NOTE,
+  SUMMARY_COLUMNS,
+} from "./lib.js";
 
 const sheet = document.getElementById("sheet");
 
@@ -121,6 +133,78 @@ function questSection(inProgress, completedCount) {
   );
 }
 
+// Who plays this character, their other characters, and a form to change it.
+function playerSection(c, players, others) {
+  const message = el("p", { class: "form-message", role: "status", "aria-live": "polite" });
+  const list = el("datalist", { id: "player-options" });
+  fillPlayerList(list, players);
+  const playerInput = el("input", {
+    name: "player",
+    list: "player-options",
+    autocomplete: "off",
+    maxlength: 32,
+    value: c.player_name ?? "",
+    placeholder: "Who plays it",
+  });
+  const passInput = el("input", { name: "passphrase", type: "password", autocomplete: "current-password" });
+  const passLabel = el("label", { hidden: passphrase.get() !== "" }, el("span", {}, "Group passphrase"), passInput);
+  const save = el("button", { type: "submit", class: "btn" }, "Save player");
+
+  const form = el(
+    "form",
+    { class: "add-form" },
+    el("label", {}, el("span", {}, "Player"), playerInput, list),
+    passLabel,
+    save,
+  );
+
+  form.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const pass = passphrase.get() || passInput.value;
+    if (!pass) {
+      passLabel.hidden = false;
+      message.className = "form-message error";
+      message.textContent = "Enter the group passphrase.";
+      return;
+    }
+    save.disabled = true;
+    try {
+      await callSync({ action: "set_player", id: c.id, player: playerInput.value.trim(), passphrase: pass });
+      passphrase.set(pass);
+      await load();
+    } catch (err) {
+      if (err.wrongPassphrase) {
+        passphrase.forget();
+        passLabel.hidden = false;
+      }
+      message.className = "form-message error";
+      message.textContent = err.message;
+      save.disabled = false;
+    }
+  });
+
+  return el(
+    "section",
+    { class: "panel", "aria-labelledby": "player-heading" },
+    el("h2", { id: "player-heading" }, "Player"),
+    el("p", {}, c.player_name ? `Played by ${c.player_name}.` : "Not tagged to a player yet."),
+    others.length > 0 &&
+      el(
+        "p",
+        {},
+        `${c.player_name} also plays: `,
+        others.map((o, i) => [
+          i > 0 ? ", " : "",
+          el("a", { href: characterUrl(o) }, fullName(o)),
+          ` (${o.level ?? "?"}, ${o.region.toUpperCase()})`,
+        ]),
+      ),
+    form,
+    message,
+    el("p", { class: "muted small" }, "Leave the field empty to remove the tag. A player with no characters left is removed."),
+  );
+}
+
 function removeSection(c) {
   const message = el("p", { class: "form-message", role: "status", "aria-live": "polite" });
   const passInput = el("input", { name: "passphrase", type: "password", autocomplete: "current-password" });
@@ -200,9 +284,15 @@ async function load() {
     return;
   }
 
-  const [quests, completed] = await Promise.all([
+  const players = await loadPlayers();
+  c.player_name = players.get(c.player_id) ?? null;
+
+  const [quests, completed, others] = await Promise.all([
     db.from("character_quests").select("quest_id, name").eq("character_id", c.id).eq("state", "in_progress").order("name"),
     db.from("character_quests").select("quest_id", { count: "exact", head: true }).eq("character_id", c.id).eq("state", "completed"),
+    c.player_id != null
+      ? db.from("characters").select("id, region, slug, first_name, surname, level").eq("player_id", c.player_id).neq("id", c.id).order("level", { ascending: false })
+      : Promise.resolve({ data: [] }),
   ]);
 
   document.title = `${fullName(c)} - Forever Roster`;
@@ -210,6 +300,7 @@ async function load() {
     el("div", { class: "sheet-head" }, characterCard(c, { onUpdate: load })),
     el("div", { class: "sheet-grid" }, gearSection(c.equipment), professionsSection(c.professions)),
     questSection(quests.data ?? [], completed.count),
+    playerSection(c, players, others.data ?? []),
     removeSection(c),
   );
 }

@@ -265,6 +265,9 @@ Each phase ends with something a friend can use. Stop after each one.
   person, what to pick up and which pre-quests to do first, in chain order,
   with unshareable quests listed first and shareable ones marked "one of you
   can share this".
+- A small "group readiness" section on the front page (Scott asked for it):
+  per dungeon that fits the group, how many players have their quests ready,
+  counting each player once.
 - Check the filtered list against Scott's in-game journal before calling it
   done (numbers in the data section below).
 

@@ -154,6 +154,7 @@ export function characterCard(c, { link = false, onUpdate } = {}) {
     el(
       "dl",
       { class: "facts" },
+      c.player_name && [el("dt", {}, "Player"), el("dd", {}, c.player_name)],
       c.guild && [el("dt", {}, "Guild"), el("dd", {}, c.guild)],
       c.item_level != null && [el("dt", {}, "Item level"), el("dd", {}, c.item_level)],
       c.last_login_at && [el("dt", {}, "Last on"), el("dd", {}, timeAgo(c.last_login_at))],
@@ -169,6 +170,46 @@ export function characterCard(c, { link = false, onUpdate } = {}) {
   );
 }
 
+// The condensed leather card for a player's other characters. Refresh and
+// the full details live on the character page.
+export function altCard(c) {
+  return el(
+    "article",
+    { class: "card card-alt" },
+    el(
+      "div",
+      { class: "card-top" },
+      avatar(c),
+      el(
+        "div",
+        { class: "card-id" },
+        el("h4", { class: "char-name" }, el("a", { href: characterUrl(c) }, fullName(c))),
+        el("p", { class: "char-line" }, `Level ${c.level ?? "?"} `, classSpan(c.class)),
+        el(
+          "p",
+          { class: "char-line alt-meta" },
+          [titleCase(c.faction), c.ruleset, c.last_login_at && `last on ${timeAgo(c.last_login_at)}`]
+            .filter(Boolean)
+            .join(" · "),
+        ),
+      ),
+    ),
+    c.sync_error && el("p", { class: "card-error" }, `Last refresh failed: ${c.sync_error}`),
+  );
+}
+
 export const SUMMARY_COLUMNS =
   "id, region, slug, first_name, surname, level, class, race, faction, guild, ruleset, " +
-  "item_level, avatar_url, last_login_at, last_synced_at, sync_error";
+  "item_level, avatar_url, last_login_at, last_synced_at, sync_error, player_id";
+
+// Loads all players as a Map of id to name.
+export async function loadPlayers() {
+  const { data, error } = await db.from("players").select("id, name").order("name");
+  if (error) console.error(error);
+  return new Map((data ?? []).map((p) => [p.id, p.name]));
+}
+
+// Fills a <datalist> with player names so the player field suggests them.
+export function fillPlayerList(datalist, players) {
+  datalist.replaceChildren(...[...players.values()].map((name) => el("option", { value: name })));
+}

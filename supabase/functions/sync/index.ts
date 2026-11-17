@@ -2,7 +2,9 @@
 //
 // POST body, one of:
 //   { "action": "check", "passphrase": "..." }
-//   { "action": "add", "passphrase": "...", "region": "us", "name": "Nachtwald", "surname": "Ravensong" }
+//   { "action": "add", "passphrase": "...", "region": "us", "name": "Nachtwald", "surname": "Ravensong",
+//     "player": "Scott" }                  player is optional
+//   { "action": "set_player", "passphrase": "...", "id": 1, "player": "Scott" }   "" removes the tag
 //   { "action": "remove", "passphrase": "...", "id": 1 }
 //   { "action": "refresh", "id": 1 }       10-minute cooldown per character
 //   { "action": "all" }                    needs header x-cron-secret = CRON_SECRET
@@ -23,7 +25,7 @@ const PASSPHRASE_LOCK_MS = 15 * 60 * 1000;
 // Columns sent back to the browser: everything except the raw JSON blobs.
 const SUMMARY_COLUMNS =
   "id, region, blizzard_id, first_name, surname, slug, level, class, race, faction, guild, ruleset, " +
-  "item_level, avatar_url, last_synced_at, sync_error";
+  "item_level, avatar_url, last_synced_at, sync_error, player_id";
 
 const CORS = {
   "access-control-allow-origin": "*",
@@ -151,6 +153,8 @@ async function handleAdd(req: Request, body: Record<string, unknown>) {
   if (!REGIONS.includes(region)) return json({ error: `Region must be one of ${REGIONS.join(", ")}.` }, 400);
   if (!name || !surname) return json({ error: "Name and surname are both needed." }, 400);
   if (name.length > 32 || surname.length > 32) return json({ error: "That name is too long." }, 400);
+  const player = playerName(body.player);
+  if (player === undefined) return json({ error: "Player names can be up to 32 characters." }, 400);
 
   const slug = makeSlug(name, surname);
 
@@ -163,7 +167,16 @@ async function handleAdd(req: Request, body: Record<string, unknown>) {
   if (existing) return json({ character: existing, existed: true });
 
   try {
-    return json({ character: await syncOne(region, slug), existed: false });
+    const character = await syncOne(region, slug);
+    if (player) {
+      const { data: playerId, error } = await db.rpc("set_character_player", {
+        p_character_id: character.id,
+        p_player: player,
+      });
+      if (error) console.error("tagging player failed", slug, error);
+      else character.player_id = playerId;
+    }
+    return json({ character, existed: false });
   } catch (err) {
     if (err instanceof NotFoundError) {
       const other = region === "us" ? "EU" : "US";
@@ -175,6 +188,28 @@ async function handleAdd(req: Request, body: Record<string, unknown>) {
     console.error("add failed", slug, err);
     return json({ error: "Blizzard did not answer properly. Try again in a minute." }, 502);
   }
+}
+
+// Returns the trimmed player name, "" for none, or undefined when too long.
+function playerName(value: unknown): string | undefined {
+  const name = String(value ?? "").trim();
+  return name.length > 32 ? undefined : name;
+}
+
+async function handleSetPlayer(req: Request, body: Record<string, unknown>) {
+  const denied = await checkPassphrase(req, body.passphrase);
+  if (denied) return denied;
+
+  const id = Number(body.id);
+  if (!Number.isInteger(id)) return json({ error: "Missing character id." }, 400);
+  const player = playerName(body.player);
+  if (player === undefined) return json({ error: "Player names can be up to 32 characters." }, 400);
+
+  const { data: playerId, error } = await db.rpc("set_character_player", { p_character_id: id, p_player: player });
+  if (error) {
+    return json({ error: error.message.includes("no such character") ? "No such character." : error.message }, 400);
+  }
+  return json({ player_id: playerId });
 }
 
 async function handleRemove(req: Request, body: Record<string, unknown>) {
@@ -263,11 +298,13 @@ Deno.serve(async (req) => {
       return handleAdd(req, body);
     case "remove":
       return handleRemove(req, body);
+    case "set_player":
+      return handleSetPlayer(req, body);
     case "refresh":
       return handleRefresh(body);
     case "all":
       return handleAll(req);
     default:
-      return json({ error: "action must be check, add, remove, refresh or all." }, 400);
+      return json({ error: "action must be check, add, remove, set_player, refresh or all." }, 400);
   }
 });

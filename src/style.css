@@ -618,3 +618,72 @@ details summary {
 .quest-list li {
   break-inside: avoid;
 }
+
+/* Players: one column per player per region, main on top, alts condensed. */
+
+.player-column {
+  display: grid;
+  gap: 8px;
+  align-content: start;
+}
+
+.player-name {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 18px;
+  line-height: 24px;
+  color: var(--gold-heading);
+}
+
+.region-badge {
+  color: var(--text);
+  border-color: var(--muted);
+}
+
+.alts {
+  display: grid;
+  gap: 8px;
+}
+
+.card-alt {
+  gap: 4px;
+  padding: 8px 12px;
+}
+
+.card-alt .avatar {
+  width: 40px;
+  height: 40px;
+}
+
+.card-alt .avatar-fallback {
+  font-size: 20px;
+}
+
+.card-alt .char-name {
+  font-size: 16px;
+  line-height: 22px;
+}
+
+.alt-meta {
+  font-size: 12px;
+  line-height: 18px;
+}
+
+.chip-player {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text);
+}
+
+.chip-alts {
+  list-style: none;
+  margin: 4px 0 0;
+  padding: 4px 0 0;
+  border-top: 1px solid var(--hover);
+  font-size: 12px;
+  line-height: 18px;
+  color: var(--muted);
+}

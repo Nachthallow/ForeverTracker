@@ -49,9 +49,9 @@
             <label>
               <span>Sort</span>
               <select id="sort">
-                <option value="level-desc">Level, high first</option>
-                <option value="level-asc">Level, low first</option>
-                <option value="name">Name</option>
+                <option value="level-desc">Highest level first</option>
+                <option value="level-asc">Lowest level first</option>
+                <option value="name">Player name</option>
               </select>
             </label>
           </div>
@@ -79,6 +79,11 @@
               <option value="kr">KR</option>
               <option value="tw">TW</option>
             </select>
+          </label>
+          <label>
+            <span>Player (optional)</span>
+            <input name="player" list="player-list" autocomplete="off" maxlength="32" placeholder="Who plays it" />
+            <datalist id="player-list"></datalist>
           </label>
           <label id="pass-field">
             <span>Group passphrase</span>
