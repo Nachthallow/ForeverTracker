@@ -405,7 +405,7 @@ function playerHead(unit) {
 // What the cell says, as a prep checklist:
 //   not cleared: "Pick up 3" (quests to grab), "Pre-quest first", or "Ready"
 //   cleared:     "1 quest left", "Complete" (every quest done), or "Cleared"
-//   too low:     "2 to go" or "Too low"
+//   too low:     "Lvl 30 needed (1 level to go)"
 function cellStatus(s, c, d, list, sum) {
   if (s.kind === "go") {
     const pickup = list.filter((x) => x.kind === "pickup").length;
@@ -420,8 +420,9 @@ function cellStatus(s, c, d, list, sum) {
   if (s.kind === "done") {
     return sum.total > 0 && sum.done === sum.total ? { text: "Complete", tone: "quiet" } : { text: "Cleared", tone: "quiet" };
   }
-  if (s.kind === "close") return { text: `${s.gap} to go`, tone: "quiet" };
-  return { text: "Too low", tone: "quiet" };
+  // Below the minimum level: say which level, and how far off it is.
+  const gap = d.min_level - (c.level ?? 0);
+  return { text: `Lvl ${d.min_level} needed (${gap} ${gap === 1 ? "level" : "levels"} to go)`, tone: "quiet" };
 }
 
 function playerCell(unit, s, d) {
