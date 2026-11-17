@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Forever Roster</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Marcellus&family=Open+Sans:wght@400;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/src/style.css" />
+  </head>
+  <body>
+    <header class="site-header">
+      <h1>Forever Roster</h1>
+      <p class="tagline">Who is playing what, and what they still need.</p>
+    </header>
+
+    <main>
+      <section class="panel" aria-labelledby="add-heading">
+        <h2 id="add-heading">Add character</h2>
+        <form id="add-form" class="add-form" novalidate>
+          <label>
+            <span>Name</span>
+            <input name="name" autocomplete="off" required maxlength="32" />
+          </label>
+          <label>
+            <span>Surname</span>
+            <input name="surname" autocomplete="off" required maxlength="32" />
+          </label>
+          <label>
+            <span>Region</span>
+            <select name="region">
+              <option value="us" selected>US</option>
+              <option value="eu">EU</option>
+              <option value="kr">KR</option>
+              <option value="tw">TW</option>
+            </select>
+          </label>
+          <button type="submit" class="btn btn-solid">Add character</button>
+        </form>
+        <p id="add-message" class="form-message" role="status" aria-live="polite"></p>
+      </section>
+
+      <section aria-labelledby="roster-heading">
+        <div class="roster-bar">
+          <h2 id="roster-heading">Roster</h2>
+          <div class="filters">
+            <label>
+              <span>Faction</span>
+              <select id="filter-faction">
+                <option value="">All</option>
+                <option value="ALLIANCE">Alliance</option>
+                <option value="HORDE">Horde</option>
+              </select>
+            </label>
+            <label>
+              <span>Region</span>
+              <select id="filter-region">
+                <option value="">All</option>
+                <option value="us">US</option>
+                <option value="eu">EU</option>
+                <option value="kr">KR</option>
+                <option value="tw">TW</option>
+              </select>
+            </label>
+            <label>
+              <span>Sort</span>
+              <select id="sort">
+                <option value="level-desc">Level, high first</option>
+                <option value="level-asc">Level, low first</option>
+                <option value="name">Name</option>
+              </select>
+            </label>
+          </div>
+        </div>
+        <p id="roster-message" class="roster-message" role="status" aria-live="polite"></p>
+        <div id="roster" class="roster"></div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <p>
+        Unofficial fan site, not affiliated with Blizzard Entertainment. Character data and avatars
+        come from the Blizzard API.
+      </p>
+    </footer>
+
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
