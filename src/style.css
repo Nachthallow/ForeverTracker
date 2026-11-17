@@ -693,7 +693,8 @@ details summary {
   color: var(--muted);
 }
 
-/* What we can run: the front page's main board. */
+/* What we can run: the run grid. One table per group: a row per dungeon, a
+   column per player, a row opens everyone's quests side by side. */
 
 .board-head {
   display: flex;
@@ -712,198 +713,297 @@ details summary {
   margin-top: 32px;
 }
 
-.band + .band {
-  margin-top: 24px;
-}
-
-.band-title {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin: 16px 0 12px;
-  font: 700 11px/16px var(--font-body);
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--muted);
-}
-
-.band-title::after {
-  content: "";
-  flex: 1;
-  height: 1px;
-  background: var(--hover);
-}
-
-.dungeon-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-  gap: 16px;
-  align-items: start;
-}
-
-.dungeon {
-  display: grid;
-  gap: 8px;
-  padding: 16px;
+/* Wide groups scroll inside their own box, never the page. */
+.rg-scroll {
+  overflow-x: auto;
   background: var(--panel);
   border: 1px solid var(--hover);
   border-radius: var(--radius-card);
 }
 
-.dungeon.new {
-  border-top: 2px solid var(--gold-heading);
+/* Fills the box; with many players it keeps every column at least 160px
+   wide and scrolls inside the box instead. */
+.rg-table {
+  --rg-first: minmax(220px, 300px);
+  --rg-first-min: 220px;
+  --rg-range: 64px;
+  min-width: calc(var(--rg-first-min) + var(--rg-range) + var(--rg-players) * 176px + 56px);
 }
 
-.dungeon-head {
+.rg-head,
+.rg-line,
+.rg-drawer {
+  display: grid;
+  grid-template-columns: var(--rg-first) var(--rg-range) repeat(var(--rg-players), minmax(160px, 1fr));
+  gap: 0 16px;
+  padding-inline: 20px;
+}
+
+/* The dungeon column stays put while the player columns scroll. */
+.rg-head > :first-child,
+.rg-dungeon,
+.rg-drawer-note {
+  position: sticky;
+  left: 0;
+  z-index: 1;
+  /* Cover the row padding too, so nothing scrolls past on the left. */
+  margin-left: -20px;
+  padding-left: 20px;
+}
+
+.rg-head > :first-child {
+  align-self: stretch;
   display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 8px;
-  margin-bottom: 4px;
+  align-items: flex-end;
+  background: var(--panel);
 }
 
-.dungeon-name {
-  font-size: 20px;
-  line-height: 26px;
-  color: var(--gold-heading);
+.rg-dungeon {
+  align-self: stretch;
+  background: var(--panel);
 }
 
-.dungeon-count {
-  margin: 2px 0 0;
-  font-size: 12px;
-  line-height: 18px;
-  color: var(--muted);
+.rg-line:hover .rg-dungeon,
+.rg-row[open] > .rg-line .rg-dungeon {
+  background: var(--hover);
 }
 
-.dungeon-tags {
-  display: flex;
-  flex: none;
-  gap: 4px;
+.rg-drawer-note {
+  align-self: stretch;
+  align-content: start;
+  background: var(--ground);
 }
 
-.range,
-.tag-new {
+.rg-band > span {
+  position: sticky;
+  left: 20px;
+}
+
+.rg-head {
+  align-items: end;
+  padding-block: 14px;
+  border-bottom: 1px solid var(--hover);
+}
+
+.rg-label {
   font-size: 11px;
   font-weight: 700;
   line-height: 16px;
   letter-spacing: 0.05em;
-  padding: 2px 8px;
-  border-radius: var(--radius-small);
-  white-space: nowrap;
-}
-
-.range {
-  color: var(--text);
-  border: 1px solid var(--muted);
-}
-
-.tag-new {
-  text-transform: uppercase;
-  color: var(--gold-heading);
-  border: 1px solid var(--gold-heading);
-}
-
-/* Player rows: one line each, click to open that player's quests. */
-
-.pr-head,
-.player-row summary {
-  display: grid;
-  grid-template-columns: 1fr 32px 52px 92px;
-  align-items: center;
-  gap: 8px;
-}
-
-.pr-head {
-  padding: 0 8px;
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.05em;
   text-transform: uppercase;
   color: var(--muted);
 }
 
-.player-rows {
-  list-style: none;
-  margin: 0;
-  padding: 0;
+.rg-player {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.rg-avatar {
+  flex: none;
+  width: 32px;
+  height: 32px;
+  border: 2px solid var(--frame);
+  border-radius: var(--radius-small);
+  object-fit: cover;
+  background: linear-gradient(160deg, var(--leather-from), var(--leather-to));
+}
+
+.rg-avatar-letter {
   display: grid;
-  gap: 4px;
+  place-items: center;
+  font: 16px/1 var(--font-heading);
+  color: var(--gold-name);
 }
 
-.player-row details {
-  background: var(--ground);
-  border-radius: var(--radius-small);
+.rg-player-text {
+  display: grid;
+  min-width: 0;
 }
 
-.player-row summary {
-  padding: 6px 8px;
-  cursor: pointer;
-  list-style: none;
-  border-radius: var(--radius-small);
-}
-
-.player-row summary::-webkit-details-marker {
-  display: none;
-}
-
-.player-row summary:hover {
-  background: var(--hover);
-}
-
-.pr-name {
+.rg-player-name {
+  font: 16px/20px var(--font-heading);
+  color: var(--gold-name);
+  text-decoration: none;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  color: var(--text);
+}
+
+.rg-player-name:hover {
+  text-decoration: underline;
+}
+
+.rg-player-meta {
+  font-size: 12px;
+  line-height: 16px;
+  color: var(--muted);
+}
+
+.rg-band {
+  padding: 10px 20px 6px;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 16px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+  background: var(--ground);
+  border-top: 1px solid var(--hover);
+}
+
+.rg-row {
+  border-top: 1px solid var(--hover);
+}
+
+.rg-line {
+  align-items: center;
+  padding-block: 12px;
+  cursor: pointer;
+  list-style: none;
+}
+
+.rg-line::-webkit-details-marker {
+  display: none;
+}
+
+.rg-line:hover,
+.rg-row[open] > .rg-line {
+  background: var(--hover);
+}
+
+.rg-dungeon {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
 }
 
 /* A small drawn chevron that turns when the row is open. */
-.pr-name::before {
-  content: "";
-  display: inline-block;
-  width: 6px;
-  height: 6px;
-  margin: 0 8px 2px 0;
+.rg-chevron {
+  flex: none;
+  width: 7px;
+  height: 7px;
   border-right: 2px solid var(--muted);
   border-bottom: 2px solid var(--muted);
   transform: rotate(-45deg);
   transition: transform 0.15s;
 }
 
-.player-row details[open] .pr-name::before {
+.rg-row[open] .rg-chevron {
   transform: rotate(45deg);
 }
 
-.pr-level,
-.pr-quests {
-  font-size: 12px;
-  color: var(--muted);
+.rg-dungeon-name {
+  font: 18px/24px var(--font-heading);
+  color: var(--gold-heading);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tag-new {
+  flex: none;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 14px;
+  letter-spacing: 0.05em;
+  padding: 1px 6px;
+  text-transform: uppercase;
+  color: var(--gold-heading);
+  border: 1px solid var(--gold-heading);
+  border-radius: var(--radius-small);
+}
+
+.rg-range {
+  font-size: 13px;
   font-variant-numeric: tabular-nums;
 }
 
-.pr-log {
-  color: var(--gold-heading);
+.rg-cell {
+  display: grid;
+  gap: 5px;
+  min-width: 0;
 }
 
-.pr-status {
+.rg-cell-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.rg-status {
   font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.05em;
   text-transform: uppercase;
-  text-align: right;
+  white-space: nowrap;
 }
 
-.pr-go .pr-status { color: var(--success); }
-.pr-worth .pr-status { color: var(--success); }
-.pr-close .pr-status { color: var(--gold-heading); }
-.pr-done .pr-status,
-.pr-past .pr-status,
-.pr-done .pr-name,
-.pr-past .pr-name { color: var(--muted); }
+.rg-go .rg-status,
+.rg-worth .rg-status { color: var(--success); }
+.rg-close .rg-status { color: var(--gold-heading); }
+.rg-done .rg-status,
+.rg-past .rg-status,
+.rg-far .rg-status { color: var(--muted); }
 
-.pr-body {
-  padding: 4px 8px 10px 22px;
+.rg-count {
+  font-size: 12px;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.rg-log {
+  color: var(--gold-heading);
+}
+
+.rg-bar {
+  display: flex;
+  height: 4px;
+  overflow: hidden;
+  background: var(--ground);
+  border-radius: var(--radius-small);
+}
+
+.rg-bar-done { background: var(--success); }
+.rg-bar-log { background: var(--gold-heading); }
+
+.rg-done .rg-bar,
+.rg-past .rg-bar,
+.rg-far .rg-bar {
+  opacity: 0.45;
+}
+
+.rg-as {
+  font-size: 11px;
+  line-height: 14px;
+  color: var(--muted);
+}
+
+/* The opened row. */
+.rg-drawer {
+  align-items: start;
+  padding-block: 6px 18px;
+  background: var(--ground);
   border-top: 1px solid var(--hover);
+}
+
+.rg-drawer-note {
+  grid-column: span 2;
+  padding-top: 10px;
+  font-size: 12px;
+  line-height: 18px;
+  color: var(--muted);
+  display: grid;
+  gap: 6px;
+}
+
+.rg-drawer-col {
+  min-width: 0;
 }
 
 .pr-link {
@@ -914,22 +1014,22 @@ details summary {
 
 .quest-rows {
   list-style: none;
-  margin: 6px 0 0;
+  margin: 10px 0 0;
   padding: 0;
   display: grid;
-  gap: 4px;
+  gap: 6px;
 }
 
 .quest-row {
   display: grid;
-  grid-template-columns: 76px 1fr;
+  grid-template-columns: 70px 1fr;
   gap: 8px;
   font-size: 13px;
-  line-height: 20px;
+  line-height: 18px;
 }
 
 .q-state {
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 700;
   letter-spacing: 0.05em;
   text-transform: uppercase;
@@ -949,13 +1049,18 @@ details summary {
   display: inline-block;
   margin-left: 6px;
   padding: 0 4px;
-  font-size: 10px;
+  font-size: 9px;
   font-weight: 700;
   letter-spacing: 0.05em;
   text-transform: uppercase;
   color: var(--gold-heading);
   border: 1px solid var(--gold-heading);
   border-radius: var(--radius-small);
+}
+
+.q-flag-grey {
+  color: var(--muted);
+  border-color: var(--muted);
 }
 
 .q-step {
@@ -966,32 +1071,26 @@ details summary {
 }
 
 .quest-empty {
-  margin: 6px 0 0;
+  margin: 10px 0 0;
   font-size: 12px;
   color: var(--muted);
 }
 
-.dungeon-note {
-  margin: 4px 0 0;
-  font-size: 12px;
-  line-height: 18px;
-  color: var(--muted);
-}
-
-@media (max-width: 420px) {
-  .pr-head,
-  .player-row summary {
-    grid-template-columns: 1fr 28px 44px 76px;
-    gap: 6px;
+/* Phones: a narrower pinned dungeon column, names may wrap. Last, so it wins. */
+@media (max-width: 640px) {
+  .rg-table {
+    --rg-first: 150px;
+    --rg-first-min: 150px;
+    --rg-range: 44px;
   }
 
-  .quest-row {
-    grid-template-columns: 1fr;
-    gap: 0;
+  .rg-dungeon-name {
+    white-space: normal;
+    font-size: 16px;
+    line-height: 20px;
   }
-}
 
-.q-flag-grey {
-  color: var(--muted);
-  border-color: var(--muted);
+  .rg-drawer-note {
+    grid-column: span 1;
+  }
 }

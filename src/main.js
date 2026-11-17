@@ -1,5 +1,5 @@
-// Front page: the group view. Level line first, then the characters grouped
-// by player and region, then the add form.
+// Front page: the group view. The run grid of dungeons first, then the level
+// line, then the characters grouped by player and region, then the add form.
 import {
   db,
   el,
@@ -229,7 +229,6 @@ function standing(unit, d) {
 }
 
 const STANDING_TEXT = { go: "Can go", worth: "Quests left", done: "Done", past: "Past it" };
-const STANDING_ORDER = { go: 0, worth: 1, close: 2, done: 3, past: 4, far: 5 };
 const GOING = new Set(["go", "worth"]);
 
 // Open quests in this dungeon that are not grey for the character yet.
@@ -320,82 +319,9 @@ function questList(list, c) {
   );
 }
 
-// One player in a dungeon card: a summary row that opens their quest list.
-function playerRow(unit, s, d) {
-  const c = s.character;
-  // Name the character when it is not the main, so alts are clear.
-  let label = fullName(c);
-  if (unit.player) label = c === unit.characters[0] ? unit.player : `${unit.player} (${c.first_name})`;
-  const status = s.kind === "close" ? `${s.gap} to go` : STANDING_TEXT[s.kind];
-  const list = questsFor(c, d);
-  const sum = questSummary(list);
-  return el(
-    "li",
-    { class: `player-row pr-${s.kind}` },
-    el(
-      "details",
-      {},
-      el(
-        "summary",
-        {},
-        el("span", { class: "pr-name" }, label),
-        el("span", { class: "pr-level" }, c.level ?? "?"),
-        el(
-          "span",
-          { class: "pr-quests", title: "Quests done out of all quests for this dungeon" },
-          sum.total ? `${sum.done}/${sum.total}` : "",
-          sum.log > 0 && el("span", { class: "pr-log" }, ` +${sum.log}`),
-        ),
-        el("span", { class: "pr-status" }, status),
-      ),
-      el(
-        "div",
-        { class: "pr-body" },
-        questList(list, c),
-        el("a", { class: "pr-link", href: characterUrl(c) }, `Open ${fullName(c)}`),
-      ),
-    ),
-  );
-}
+// The run grid: one table per group, a row per dungeon, a column per player.
 
-function dungeonCard(d, rows) {
-  const canGo = rows.filter((r) => GOING.has(r.s.kind)).length;
-  const shown = rows
-    .filter((r) => r.s.kind !== "far")
-    .sort((a, b) => STANDING_ORDER[a.s.kind] - STANDING_ORDER[b.s.kind]);
-  return el(
-    "article",
-    { class: d.is_new ? "dungeon new" : "dungeon" },
-    el(
-      "header",
-      { class: "dungeon-head" },
-      el(
-        "div",
-        {},
-        el("h3", { class: "dungeon-name" }, d.name),
-        el("p", { class: "dungeon-count" }, `${canGo} of ${rows.length} can go`),
-      ),
-      el(
-        "div",
-        { class: "dungeon-tags" },
-        el("span", { class: "range" }, `${d.min_level}–${d.max_level}`),
-        d.is_new && el("span", { class: "tag-new" }, "New"),
-      ),
-    ),
-    el(
-      "div",
-      { class: "pr-head", "aria-hidden": "true" },
-      el("span", {}, "Player"),
-      el("span", {}, "Lvl"),
-      el("span", {}, "Quests"),
-      el("span", {}, ""),
-    ),
-    el("ul", { class: "player-rows" }, shown.map((r) => playerRow(r.unit, r.s, d))),
-    d.criteria_id == null &&
-      el("p", { class: "dungeon-note" }, "Blizzard does not report this dungeon, so all its quests done counts as done."),
-    d.faction_note && el("p", { class: "dungeon-note" }, d.faction_note),
-  );
-}
+const CELL_TEXT = { ...STANDING_TEXT, far: "Too low" };
 
 function lineTitle(units) {
   const first = units[0].characters[0];
@@ -406,6 +332,144 @@ function lineTitle(units) {
 function bandOf(d) {
   const low = Math.floor(d.min_level / 10) * 10;
   return { key: low, label: `Levels ${low}–${low + 9}` };
+}
+
+function avatarSquare(c) {
+  const initial = el("span", { class: "rg-avatar rg-avatar-letter", "aria-hidden": "true" }, c.first_name.charAt(0));
+  if (!c.avatar_url) return initial;
+  const img = el("img", { class: "rg-avatar", src: c.avatar_url, alt: "", loading: "lazy", width: 32, height: 32 });
+  img.addEventListener("error", () => img.replaceWith(initial));
+  return img;
+}
+
+function playerHead(unit) {
+  const main = unit.characters[0];
+  return el(
+    "div",
+    { class: "rg-player" },
+    avatarSquare(main),
+    el(
+      "div",
+      { class: "rg-player-text" },
+      el("a", { class: "rg-player-name", href: characterUrl(main) }, unit.player ?? fullName(main)),
+      el(
+        "span",
+        { class: "rg-player-meta" },
+        `${main.level ?? "?"} `,
+        classSpan(main.class),
+        unit.characters.length > 1 && ` · +${unit.characters.length - 1}`,
+      ),
+    ),
+  );
+}
+
+// One player's cell in a dungeon row: status, quests done/total and a bar.
+function playerCell(unit, s, d) {
+  const c = s.character;
+  const sum = questSummary(questsFor(c, d));
+  const status = s.kind === "close" ? `${s.gap} to go` : CELL_TEXT[s.kind];
+  const pct = (n) => (sum.total ? `${Math.round((n / sum.total) * 100)}%` : "0%");
+  const isAlt = c !== unit.characters[0];
+  return el(
+    "div",
+    { class: `rg-cell rg-${s.kind}` },
+    el(
+      "div",
+      { class: "rg-cell-top" },
+      el("span", { class: "rg-status" }, status),
+      el(
+        "span",
+        { class: "rg-count", title: "Quests done out of all quests for this dungeon, plus in log" },
+        sum.total ? `${sum.done}/${sum.total}` : "No quests",
+        sum.log > 0 && el("span", { class: "rg-log" }, ` +${sum.log}`),
+      ),
+    ),
+    el(
+      "div",
+      { class: "rg-bar", "aria-hidden": "true" },
+      el("span", { class: "rg-bar-done", style: `width: ${pct(sum.done)}` }),
+      el("span", { class: "rg-bar-log", style: `width: ${pct(sum.log)}` }),
+    ),
+    isAlt && el("span", { class: "rg-as" }, `as ${c.first_name}, ${c.level ?? "?"}`),
+  );
+}
+
+// The opened row: each player's quests for this dungeon, side by side.
+function rowDrawer(d, rows) {
+  return el(
+    "div",
+    { class: "rg-drawer" },
+    el(
+      "div",
+      { class: "rg-drawer-note" },
+      "Pick up what is not shareable yourself. A shareable quest only needs one of you.",
+      d.faction_note && el("span", { class: "rg-drawer-extra" }, d.faction_note),
+      d.criteria_id == null &&
+        el("span", { class: "rg-drawer-extra" }, "Blizzard does not report this dungeon, so all its quests done counts as done."),
+    ),
+    rows.map(({ s }) =>
+      el(
+        "div",
+        { class: "rg-drawer-col" },
+        questList(questsFor(s.character, d), s.character),
+        el("a", { class: "pr-link", href: characterUrl(s.character) }, `Open ${fullName(s.character)}`),
+      )
+    ),
+  );
+}
+
+function dungeonRow(d, rows) {
+  return el(
+    "details",
+    { class: "rg-row" },
+    el(
+      "summary",
+      { class: "rg-line" },
+      el(
+        "span",
+        { class: "rg-dungeon" },
+        el("span", { class: "rg-chevron", "aria-hidden": "true" }),
+        el("span", { class: "rg-dungeon-name" }, d.name),
+        d.is_new && el("span", { class: "tag-new" }, "New"),
+      ),
+      el("span", { class: "rg-range" }, `${d.min_level}–${d.max_level}`),
+      rows.map(({ unit, s }) => playerCell(unit, s, d)),
+    ),
+    rowDrawer(d, rows),
+  );
+}
+
+function runGrid(units, cards) {
+  // Player columns run low to high, the order linesOf gives, like the level line.
+  const bands = new Map();
+  for (const card of cards) {
+    const band = bandOf(card.d);
+    if (!bands.has(band.key)) bands.set(band.key, { ...band, cards: [] });
+    bands.get(band.key).cards.push(card);
+  }
+  return el(
+    "div",
+    { class: "rg-scroll" },
+    el(
+      "div",
+      { class: "rg-table", style: `--rg-players: ${units.length}` },
+      el(
+        "div",
+        { class: "rg-head" },
+        el("span", { class: "rg-label" }, "Dungeon"),
+        el("span", { class: "rg-label" }, "Levels"),
+        units.map(playerHead),
+      ),
+      [...bands.values()]
+        .sort((a, b) => a.key - b.key)
+        .map((band) => [
+          el("div", { class: "rg-band" }, el("span", {}, band.label)),
+          band.cards
+            .sort((a, b) => b.canGo - a.canGo || a.d.min_level - b.d.min_level)
+            .map(({ d, rows }) => dungeonRow(d, rows)),
+        ]),
+    ),
+  );
 }
 
 function renderBoard() {
@@ -435,28 +499,7 @@ function renderBoard() {
 
     let body;
     if (cards.length) {
-      const bands = new Map();
-      for (const card of cards) {
-        const band = bandOf(card.d);
-        if (!bands.has(band.key)) bands.set(band.key, { ...band, cards: [] });
-        bands.get(band.key).cards.push(card);
-      }
-      body = [...bands.values()]
-        .sort((a, b) => a.key - b.key)
-        .map((band) =>
-          el(
-            "div",
-            { class: "band" },
-            el("h3", { class: "band-title" }, band.label),
-            el(
-              "div",
-              { class: "dungeon-grid" },
-              band.cards
-                .sort((a, b) => b.canGo - a.canGo || a.d.min_level - b.d.min_level)
-                .map(({ d, rows }) => dungeonCard(d, rows)),
-            ),
-          )
-        );
+      body = runGrid(units, cards);
     } else {
       const mid = median(units.map(top).sort((a, b) => a - b));
       const next = dungeons.find((d) => d.min_level > mid);
@@ -467,17 +510,12 @@ function renderBoard() {
         next ? ` Next up: ${next.name} from level ${next.min_level}.` : "",
       );
     }
-    return el(
-      "div",
-      { class: "board-line" },
-      lines.length > 1 && el("h3", { class: "group-title" }, lineTitle(units)),
-      body,
-    );
+    return el("div", { class: "board-line" }, el("h3", { class: "group-title" }, lineTitle(units)), body);
   });
 
   els.boardSummary.textContent = total === 1
-    ? "1 dungeon fits the group and still has someone who needs it. Click a name for their quests."
-    : `${total} dungeons fit the group and still have someone who needs them. Click a name for their quests.`;
+    ? "1 dungeon fits the group and still has someone who needs it. Click a row for everyone's quests."
+    : `${total} dungeons fit the group and still have someone who needs them. Click a row for everyone's quests.`;
   const loners = alone.map((u) => `${unitName(u)} (${lineTitle([u])})`);
   els.board.replaceChildren(
     ...blocks,
