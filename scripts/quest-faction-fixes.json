@@ -1,0 +1,987 @@
+{
+ "note": "Faction corrections for dungeon quests the game data marks open to every race. Each entry was checked against published guides on 2026-11-17; source is the page used. Applied by import-quests.mjs.",
+ "quests": {
+  "17": {
+   "faction": "ALLIANCE",
+   "title": "Uldaman Reagent Run",
+   "dungeon": "Uldaman",
+   "source": "https://www.warcrafttavern.com/forever/guides/uldaman-quests/",
+   "note": "Ghak Healtouch, Loch Modan. Conquestcapped agrees."
+  },
+  "166": {
+   "faction": "ALLIANCE",
+   "title": "The Defias Brotherhood",
+   "dungeon": "The Deadmines",
+   "source": "https://www.method.gg/wow-forever/dungeons/the-deadmines",
+   "note": "WT agrees"
+  },
+  "167": {
+   "faction": "ALLIANCE",
+   "title": "Oh Brother...",
+   "dungeon": "The Deadmines",
+   "source": "https://www.method.gg/wow-forever/dungeons/the-deadmines",
+   "note": "WT agrees"
+  },
+  "168": {
+   "faction": "ALLIANCE",
+   "title": "Collecting Memories",
+   "dungeon": "The Deadmines",
+   "source": "https://www.method.gg/wow-forever/dungeons/the-deadmines",
+   "note": "WT: all Deadmines quests Alliance-only"
+  },
+  "214": {
+   "faction": "ALLIANCE",
+   "title": "Red Silk Bandanas",
+   "dungeon": "The Deadmines",
+   "source": "https://www.method.gg/wow-forever/dungeons/the-deadmines",
+   "note": "WT agrees"
+  },
+  "377": {
+   "faction": "ALLIANCE",
+   "title": "Crime and Punishment",
+   "dungeon": "The Stockade",
+   "source": "https://www.warcrafttavern.com/forever/guides/the-stockade-quests/",
+   "note": "Both sources: Alliance; WT says all Stockade quests are Alliance-exclusive"
+  },
+  "378": {
+   "faction": "ALLIANCE",
+   "title": "The Fury Runs Deep",
+   "dungeon": "The Stockade",
+   "source": "https://www.warcrafttavern.com/forever/guides/the-stockade-quests/",
+   "note": "method.gg agrees"
+  },
+  "386": {
+   "faction": "ALLIANCE",
+   "title": "What Comes Around...",
+   "dungeon": "The Stockade",
+   "source": "https://www.warcrafttavern.com/forever/guides/the-stockade-quests/",
+   "note": "method.gg agrees"
+  },
+  "387": {
+   "faction": "ALLIANCE",
+   "title": "Quell the Uprising",
+   "dungeon": "The Stockade",
+   "source": "https://www.warcrafttavern.com/forever/guides/the-stockade-quests/",
+   "note": "method.gg agrees"
+  },
+  "388": {
+   "faction": "ALLIANCE",
+   "title": "The Color of Blood",
+   "dungeon": "The Stockade",
+   "source": "https://www.warcrafttavern.com/forever/guides/the-stockade-quests/",
+   "note": "method.gg agrees"
+  },
+  "391": {
+   "faction": "ALLIANCE",
+   "title": "The Stockade Riots",
+   "dungeon": "The Stockade",
+   "source": "https://www.warcrafttavern.com/forever/guides/the-stockade-quests/",
+   "note": "method.gg agrees"
+  },
+  "704": {
+   "faction": "ALLIANCE",
+   "title": "Agmond's Fate",
+   "dungeon": "Uldaman",
+   "source": "https://www.warcrafttavern.com/forever/guides/uldaman-quests/",
+   "note": "Prospector Ironband, Loch Modan. Conquestcapped agrees."
+  },
+  "722": {
+   "faction": "ALLIANCE",
+   "title": "Amulet of Secrets",
+   "dungeon": "Uldaman",
+   "source": "https://www.warcrafttavern.com/forever/guides/uldaman-quests/",
+   "note": "Hammertoe Grez. Conquestcapped agrees."
+  },
+  "914": {
+   "faction": "HORDE",
+   "title": "Leaders of the Fang",
+   "dungeon": "Wailing Caverns",
+   "source": "https://www.warcrafttavern.com/forever/guides/wailing-caverns-quests/",
+   "note": "WT and Method both Horde"
+  },
+  "962": {
+   "faction": "HORDE",
+   "title": "Serpentbloom",
+   "dungeon": "Wailing Caverns",
+   "source": "https://www.warcrafttavern.com/forever/guides/wailing-caverns-quests/",
+   "note": "WT and Method both Horde"
+  },
+  "971": {
+   "faction": "ALLIANCE",
+   "title": "Knowledge in the Deeps",
+   "dungeon": "Blackfathom Deeps",
+   "source": "https://www.method.gg/wow-forever/dungeons/blackfathom-deeps",
+   "note": "WT agrees"
+  },
+  "1013": {
+   "faction": "HORDE",
+   "title": "The Book of Ur",
+   "dungeon": "Shadowfang Keep",
+   "source": "https://www.method.gg/wow-forever/dungeons/shadowfang-keep",
+   "note": "WT agrees"
+  },
+  "1014": {
+   "faction": "HORDE",
+   "title": "Arugal Must Die",
+   "dungeon": "Shadowfang Keep",
+   "source": "https://www.method.gg/wow-forever/dungeons/shadowfang-keep",
+   "note": "WT: 'only 3 Horde quests in Shadowfang Keep and none for the Alliance'"
+  },
+  "1048": {
+   "faction": "HORDE",
+   "title": "Into The Scarlet Monastery",
+   "dungeon": "Scarlet Monastery: Graveyard / Scarlet Monastery: Library / Scarlet Monastery: Armory / Scarlet Monastery: Cathedral",
+   "source": "https://conquestcapped.com/guides/wow-forever/wow-forever-scarlet-monastery-guide/",
+   "note": "WT agrees"
+  },
+  "1050": {
+   "faction": "ALLIANCE",
+   "title": "Mythology of the Titans",
+   "dungeon": "Scarlet Monastery: Graveyard / Scarlet Monastery: Library / Scarlet Monastery: Armory / Scarlet Monastery: Cathedral",
+   "source": "https://conquestcapped.com/guides/wow-forever/wow-forever-scarlet-monastery-guide/",
+   "note": "WT agrees"
+  },
+  "1053": {
+   "faction": "ALLIANCE",
+   "title": "In the Name of the Light",
+   "dungeon": "Scarlet Monastery: Graveyard / Scarlet Monastery: Library / Scarlet Monastery: Armory / Scarlet Monastery: Cathedral",
+   "source": "https://conquestcapped.com/guides/wow-forever/wow-forever-scarlet-monastery-guide/",
+   "note": "WT agrees"
+  },
+  "1098": {
+   "faction": "HORDE",
+   "title": "Deathstalkers in Shadowfang",
+   "dungeon": "Shadowfang Keep",
+   "source": "https://www.method.gg/wow-forever/dungeons/shadowfang-keep",
+   "note": "WT agrees"
+  },
+  "1101": {
+   "faction": "ALLIANCE",
+   "title": "The Crone of the Kraul",
+   "dungeon": "Razorfen Kraul",
+   "source": "https://www.warcrafttavern.com/forever/guides/razorfen-kraul-quests/",
+   "note": "wow.gg agrees"
+  },
+  "1102": {
+   "faction": "HORDE",
+   "title": "A Vengeful Fate",
+   "dungeon": "Razorfen Kraul",
+   "source": "https://www.warcrafttavern.com/forever/guides/razorfen-kraul-quests/",
+   "note": "wow.gg agrees (Auld Stonespire, Thunder Bluff)"
+  },
+  "1109": {
+   "faction": "HORDE",
+   "title": "Going, Going, Guano!",
+   "dungeon": "Razorfen Kraul",
+   "source": "https://www.warcrafttavern.com/forever/guides/razorfen-kraul-quests/",
+   "note": "wow.gg agrees (Faranell, Undercity)"
+  },
+  "1113": {
+   "faction": "HORDE",
+   "title": "Hearts of Zeal",
+   "dungeon": "Scarlet Monastery: Graveyard / Scarlet Monastery: Library / Scarlet Monastery: Armory / Scarlet Monastery: Cathedral",
+   "source": "https://conquestcapped.com/guides/wow-forever/wow-forever-scarlet-monastery-guide/",
+   "note": "WT agrees"
+  },
+  "1139": {
+   "faction": "ALLIANCE",
+   "title": "The Lost Tablets of Will",
+   "dungeon": "Uldaman",
+   "source": "https://www.warcrafttavern.com/forever/guides/uldaman-quests/",
+   "note": "Advisor Belgrum. Conquestcapped agrees."
+  },
+  "1142": {
+   "faction": "ALLIANCE",
+   "title": "Mortality Wanes",
+   "dungeon": "Razorfen Kraul",
+   "source": "https://www.warcrafttavern.com/forever/guides/razorfen-kraul-quests/",
+   "note": "wow.gg agrees"
+  },
+  "1160": {
+   "faction": "HORDE",
+   "title": "Test of Lore",
+   "dungeon": "Scarlet Monastery: Graveyard / Scarlet Monastery: Library / Scarlet Monastery: Armory / Scarlet Monastery: Cathedral",
+   "source": "https://conquestcapped.com/guides/wow-forever/wow-forever-scarlet-monastery-guide/",
+   "note": "WT agrees"
+  },
+  "1198": {
+   "faction": "ALLIANCE",
+   "title": "In Search of Thaelrid",
+   "dungeon": "Blackfathom Deeps",
+   "source": "https://www.method.gg/wow-forever/dungeons/blackfathom-deeps",
+   "note": "WT lists Alliance but adds it is 'technically available to Horde as well' if picked up in Darnassus."
+  },
+  "1275": {
+   "faction": "ALLIANCE",
+   "title": "Researching the Corruption",
+   "dungeon": "Blackfathom Deeps",
+   "source": "https://www.method.gg/wow-forever/dungeons/blackfathom-deeps",
+   "note": "WT agrees"
+  },
+  "1360": {
+   "faction": "ALLIANCE",
+   "title": "Reclaimed Treasures",
+   "dungeon": "Uldaman",
+   "source": "https://www.warcrafttavern.com/forever/guides/uldaman-quests/",
+   "note": "Krom Stoutarm, Ironforge. Conquestcapped agrees."
+  },
+  "1445": {
+   "faction": "HORDE",
+   "title": "The Temple of Atal'Hakkar",
+   "dungeon": "The Temple of Atal'Hakkar",
+   "source": "https://www.warcrafttavern.com/forever/guides/sunken-temple-quests/",
+   "note": "Fel'zerul, Stonard. Conquestcapped and gfinity also Horde only."
+  },
+  "1475": {
+   "faction": "ALLIANCE",
+   "title": "Into The Temple of Atal'Hakkar",
+   "dungeon": "The Temple of Atal'Hakkar",
+   "source": "https://www.warcrafttavern.com/forever/guides/sunken-temple-quests/",
+   "note": "Brohann Caskbelly, Stormwind. Conquestcapped and gfinity also Alliance only."
+  },
+  "1489": {
+   "faction": "HORDE",
+   "title": "Hamuul Runetotem",
+   "dungeon": "Wailing Caverns",
+   "source": "https://warcraft.wiki.gg/wiki/Hamuul_Runetotem_(quest)",
+   "note": "Classic source (warcraft.wiki.gg); not covered by Forever guides."
+  },
+  "1490": {
+   "faction": "HORDE",
+   "title": "Nara Wildmane",
+   "dungeon": "Wailing Caverns",
+   "source": "https://warcraft.wiki.gg/wiki/Nara_Wildmane_(quest)",
+   "note": "Classic source (warcraft.wiki.gg); not covered by Forever guides."
+  },
+  "2040": {
+   "faction": "ALLIANCE",
+   "title": "Underground Assault",
+   "dungeon": "The Deadmines",
+   "source": "https://www.method.gg/wow-forever/dungeons/the-deadmines",
+   "note": "WT agrees"
+  },
+  "2240": {
+   "faction": "ALLIANCE",
+   "title": "The Hidden Chamber",
+   "dungeon": "Uldaman",
+   "source": "https://www.warcrafttavern.com/forever/guides/uldaman-quests/",
+   "note": "Baelog. Conquestcapped agrees."
+  },
+  "2283": {
+   "faction": "HORDE",
+   "title": "Necklace Recovery",
+   "dungeon": "Uldaman",
+   "source": "https://www.warcrafttavern.com/forever/guides/uldaman-quests/",
+   "note": "Dran Droffers, Orgrimmar. Conquestcapped agrees."
+  },
+  "2284": {
+   "faction": "HORDE",
+   "title": "Necklace Recovery, Take 2",
+   "dungeon": "Uldaman",
+   "source": "https://conquestcapped.com/guides/wow-forever/wow-forever-uldaman-guide/"
+  },
+  "2338": {
+   "faction": "HORDE",
+   "title": "Translating the Journal",
+   "dungeon": "Uldaman",
+   "source": "https://conquestcapped.com/guides/wow-forever/wow-forever-uldaman-guide/",
+   "note": "Jarkal Mossmeld"
+  },
+  "2339": {
+   "faction": "HORDE",
+   "title": "Find the Gems and Power Source",
+   "dungeon": "Uldaman",
+   "source": "https://conquestcapped.com/guides/wow-forever/wow-forever-uldaman-guide/",
+   "note": "Jarkal Mossmeld"
+  },
+  "2340": {
+   "faction": "HORDE",
+   "title": "Deliver the Gems",
+   "dungeon": "Uldaman",
+   "source": "https://conquestcapped.com/guides/wow-forever/wow-forever-uldaman-guide/",
+   "note": "Jarkal Mossmeld"
+  },
+  "2341": {
+   "faction": "HORDE",
+   "title": "Necklace Recovery, Take 3",
+   "dungeon": "Uldaman",
+   "source": "https://conquestcapped.com/guides/wow-forever/wow-forever-uldaman-guide/"
+  },
+  "2342": {
+   "faction": "HORDE",
+   "title": "Reclaimed Treasures",
+   "dungeon": "Uldaman",
+   "source": "https://www.warcrafttavern.com/forever/guides/uldaman-quests/",
+   "note": "Patrick Garrett, Undercity. Conquestcapped agrees."
+  },
+  "2361": {
+   "faction": "ALLIANCE",
+   "title": "Restoring the Necklace",
+   "dungeon": "Uldaman",
+   "source": "https://conquestcapped.com/guides/wow-forever/wow-forever-uldaman-guide/",
+   "note": "Talvash del Kissel"
+  },
+  "2398": {
+   "faction": "ALLIANCE",
+   "title": "The Lost Dwarves",
+   "dungeon": "Uldaman",
+   "source": "https://www.warcrafttavern.com/forever/guides/uldaman-quests/",
+   "note": "Prospector Stormpike, Ironforge. Only warcrafttavern lists it."
+  },
+  "2841": {
+   "faction": "HORDE",
+   "title": "Rig Wars",
+   "dungeon": "Gnomeregan",
+   "source": "https://conquestcapped.com/guides/wow-forever/wow-forever-gnomeregan-guide/",
+   "note": "WT and Gfinity agree (Nogg, Orgrimmar)"
+  },
+  "2922": {
+   "faction": "ALLIANCE",
+   "title": "Save Techbot's Brain!",
+   "dungeon": "Gnomeregan",
+   "source": "https://conquestcapped.com/guides/wow-forever/wow-forever-gnomeregan-guide/",
+   "note": "WT and Gfinity agree"
+  },
+  "2923": {
+   "faction": "ALLIANCE",
+   "title": "Tinkmaster Overspark",
+   "dungeon": "Gnomeregan",
+   "source": "https://classicdb.ch/?quest=2923",
+   "note": "Classic source; warcrafttavern.com/wow-classic/guides/gnomeregan also lists it as Alliance (Brother Sarno)"
+  },
+  "2924": {
+   "faction": "ALLIANCE",
+   "title": "Essential Artificials",
+   "dungeon": "Gnomeregan",
+   "source": "https://conquestcapped.com/guides/wow-forever/wow-forever-gnomeregan-guide/",
+   "note": "WT and Gfinity agree"
+  },
+  "2925": {
+   "faction": "ALLIANCE",
+   "title": "Klockmort's Essentials",
+   "dungeon": "Gnomeregan",
+   "source": "https://warcraft.wiki.gg/wiki/Klockmort's_Essentials",
+   "note": "Classic source. Sources disagree: warcraft.wiki.gg says Alliance (Mathiel, Darnassus breadcrumb); classicdb.ch/?quest=2925 says Side: Both. Not in any Forever guide."
+  },
+  "2926": {
+   "faction": "ALLIANCE",
+   "title": "Gnogaine",
+   "dungeon": "Gnomeregan",
+   "source": "https://conquestcapped.com/guides/wow-forever/wow-forever-gnomeregan-guide/",
+   "note": "WT and Gfinity agree"
+  },
+  "2927": {
+   "faction": "ALLIANCE",
+   "title": "The Day After",
+   "dungeon": "Gnomeregan",
+   "source": "https://classicdb.ch/?quest=2927",
+   "note": "Classic source; warcrafttavern.com/wow-classic/guides/gnomeregan also lists it as Alliance"
+  },
+  "2928": {
+   "faction": "ALLIANCE",
+   "title": "Gyrodrillmatic Excavationators",
+   "dungeon": "Gnomeregan",
+   "source": "https://conquestcapped.com/guides/wow-forever/wow-forever-gnomeregan-guide/",
+   "note": "WT and Gfinity agree"
+  },
+  "2929": {
+   "faction": "ALLIANCE",
+   "title": "The Grand Betrayal",
+   "dungeon": "Gnomeregan",
+   "source": "https://conquestcapped.com/guides/wow-forever/wow-forever-gnomeregan-guide/",
+   "note": "WT and Gfinity agree"
+  },
+  "2930": {
+   "faction": "ALLIANCE",
+   "title": "Data Rescue",
+   "dungeon": "Gnomeregan",
+   "source": "https://conquestcapped.com/guides/wow-forever/wow-forever-gnomeregan-guide/",
+   "note": "WT and Gfinity agree"
+  },
+  "2931": {
+   "faction": "ALLIANCE",
+   "title": "Castpipe's Task",
+   "dungeon": "Gnomeregan",
+   "source": "https://warcraft.wiki.gg/wiki/Castpipe's_Task",
+   "note": "Classic source. Sources disagree: warcraft.wiki.gg says Alliance; classicdb.ch/?quest=2931 says Side: Both (giver Gaxim Rustfizzle, leads to Castpipe in Ironforge). Not in any Forever guide."
+  },
+  "2936": {
+   "faction": "HORDE",
+   "title": "The Spider God",
+   "dungeon": "Zul'Farrak",
+   "source": "https://www.warcrafttavern.com/forever/guides/zulfarrak-quests/",
+   "note": "Master Gadrin, Sen'jin Village. Conquestcapped also Horde only."
+  },
+  "2962": {
+   "faction": "ALLIANCE",
+   "title": "The Only Cure is More Green Glow",
+   "dungeon": "Gnomeregan",
+   "source": "https://conquestcapped.com/guides/wow-forever/wow-forever-gnomeregan-guide/",
+   "note": "WT and Gfinity agree"
+  },
+  "2991": {
+   "faction": "ALLIANCE",
+   "title": "Nekrum's Medallion",
+   "dungeon": "Zul'Farrak",
+   "source": "https://www.warcrafttavern.com/forever/guides/zulfarrak-quests/",
+   "note": "Thadius Grimshade. Conquestcapped also Alliance only."
+  },
+  "3341": {
+   "faction": "HORDE",
+   "title": "Bring the End",
+   "dungeon": "Razorfen Downs",
+   "source": "https://wow.gg/guides/razorfen-downs",
+   "note": "WT and rankedboost agree"
+  },
+  "3380": {
+   "faction": "HORDE",
+   "title": "The Sunken Temple",
+   "dungeon": "The Temple of Atal'Hakkar",
+   "source": "https://www.warcrafttavern.com/forever/guides/sunken-temple-quests/",
+   "note": "Witch Doctor Uzer'i, Feralas; Alliance version is 3445. Only warcrafttavern lists it."
+  },
+  "3636": {
+   "faction": "ALLIANCE",
+   "title": "Bring the Light",
+   "dungeon": "Razorfen Downs",
+   "source": "https://wow.gg/guides/razorfen-downs",
+   "note": "WT agrees"
+  },
+  "3907": {
+   "faction": "HORDE",
+   "title": "Disharmony of Fire",
+   "dungeon": "Blackrock Depths",
+   "source": "https://wowf.io/en/quests/3907"
+  },
+  "3981": {
+   "faction": "HORDE",
+   "title": "Commander Gor'shak",
+   "dungeon": "Blackrock Depths",
+   "source": "https://wowf.io/en/quests/3981"
+  },
+  "3982": {
+   "faction": "HORDE",
+   "title": "What Is Going On?",
+   "dungeon": "Blackrock Depths",
+   "source": "https://wowf.io/en/quests/3982"
+  },
+  "4001": {
+   "faction": "HORDE",
+   "title": "What Is Going On?",
+   "dungeon": "Blackrock Depths",
+   "source": "https://wowf.io/en/quests/4001"
+  },
+  "4002": {
+   "faction": "HORDE",
+   "title": "The Eastern Kingdoms",
+   "dungeon": "Blackrock Depths",
+   "source": "https://wowf.io/en/quests/4002"
+  },
+  "4003": {
+   "faction": "HORDE",
+   "title": "The Royal Rescue",
+   "dungeon": "Blackrock Depths",
+   "source": "https://wowf.io/en/quests/4003"
+  },
+  "4004": {
+   "faction": "HORDE",
+   "title": "The Princess Saved?",
+   "dungeon": "Blackrock Depths",
+   "source": "https://wowf.io/en/quests/4004"
+  },
+  "4063": {
+   "faction": "HORDE",
+   "title": "The Rise of the Machines",
+   "dungeon": "Blackrock Depths",
+   "source": "https://wowf.io/en/quests/4063"
+  },
+  "4081": {
+   "faction": "HORDE",
+   "title": "KILL ON SIGHT: Dark Iron Dwarves",
+   "dungeon": "Blackrock Depths",
+   "source": "https://wowf.io/en/quests/4081"
+  },
+  "4082": {
+   "faction": "HORDE",
+   "title": "KILL ON SIGHT: High Ranking Dark Iron Officials",
+   "dungeon": "Blackrock Depths",
+   "source": "https://wowf.io/en/quests/4082"
+  },
+  "4121": {
+   "faction": "HORDE",
+   "title": "Precarious Predicament",
+   "dungeon": "Blackrock Depths",
+   "source": "https://wowf.io/en/quests/4121"
+  },
+  "4122": {
+   "faction": "HORDE",
+   "title": "Grark Lorkrub",
+   "dungeon": "Blackrock Depths",
+   "source": "https://wowf.io/en/quests/4122",
+   "note": "classicdb (Classic) says BOTH; Forever sources agree on HORDE"
+  },
+  "4126": {
+   "faction": "ALLIANCE",
+   "title": "Hurley Blackbreath",
+   "dungeon": "Blackrock Depths",
+   "source": "https://wowf.io/en/quests/4126"
+  },
+  "4128": {
+   "faction": "ALLIANCE",
+   "title": "Ragnar Thunderbrew",
+   "dungeon": "Blackrock Depths",
+   "source": "https://wowf.io/en/quests/4128"
+  },
+  "4132": {
+   "faction": "HORDE",
+   "title": "Operation: Death to Angerforge",
+   "dungeon": "Blackrock Depths",
+   "source": "https://wowf.io/en/quests/4132"
+  },
+  "4133": {
+   "faction": "HORDE",
+   "title": "Vivian Lagrave",
+   "dungeon": "Blackrock Depths",
+   "source": "https://wowf.io/en/quests/4133",
+   "note": "classicdb (Classic) says BOTH; Forever sources agree on HORDE"
+  },
+  "4134": {
+   "faction": "HORDE",
+   "title": "Lost Thunderbrew Recipe",
+   "dungeon": "Blackrock Depths",
+   "source": "https://wowf.io/en/quests/4134",
+   "note": "classicdb (Classic) says BOTH; Forever sources agree on HORDE"
+  },
+  "4241": {
+   "faction": "ALLIANCE",
+   "title": "Marshal Windsor",
+   "dungeon": "Blackrock Depths",
+   "source": "https://wowf.io/en/quests/4241"
+  },
+  "4242": {
+   "faction": "ALLIANCE",
+   "title": "Abandoned Hope",
+   "dungeon": "Blackrock Depths",
+   "source": "https://wowf.io/en/quests/4242"
+  },
+  "4263": {
+   "faction": "ALLIANCE",
+   "title": "Incendius!",
+   "dungeon": "Blackrock Depths",
+   "source": "https://wowf.io/en/quests/4263"
+  },
+  "4264": {
+   "faction": "ALLIANCE",
+   "title": "A Crumpled Up Note",
+   "dungeon": "Blackrock Depths",
+   "source": "https://wowf.io/en/quests/4264"
+  },
+  "4282": {
+   "faction": "ALLIANCE",
+   "title": "A Shred of Hope",
+   "dungeon": "Blackrock Depths",
+   "source": "https://wowf.io/en/quests/4282"
+  },
+  "4286": {
+   "faction": "ALLIANCE",
+   "title": "The Good Stuff",
+   "dungeon": "Blackrock Depths",
+   "source": "https://wowf.io/en/quests/4286"
+  },
+  "4322": {
+   "faction": "ALLIANCE",
+   "title": "Jail Break!",
+   "dungeon": "Blackrock Depths",
+   "source": "https://wowf.io/en/quests/4322"
+  },
+  "4341": {
+   "faction": "ALLIANCE",
+   "title": "Kharan Mighthammer",
+   "dungeon": "Blackrock Depths",
+   "source": "https://wowf.io/en/quests/4341"
+  },
+  "4342": {
+   "faction": "ALLIANCE",
+   "title": "Kharan's Tale",
+   "dungeon": "Blackrock Depths",
+   "source": "https://wowf.io/en/quests/4342"
+  },
+  "4361": {
+   "faction": "ALLIANCE",
+   "title": "The Bearer of Bad News",
+   "dungeon": "Blackrock Depths",
+   "source": "https://wowf.io/en/quests/4361"
+  },
+  "4362": {
+   "faction": "ALLIANCE",
+   "title": "The Fate of the Kingdom",
+   "dungeon": "Blackrock Depths",
+   "source": "https://wowf.io/en/quests/4362"
+  },
+  "4363": {
+   "faction": "ALLIANCE",
+   "title": "The Princess's Surprise",
+   "dungeon": "Blackrock Depths",
+   "source": "https://wowf.io/en/quests/4363"
+  },
+  "4701": {
+   "faction": "ALLIANCE",
+   "title": "Put Her Down",
+   "dungeon": "Upper Blackrock Spire / Lower Blackrock Spire",
+   "source": "https://wowf.io/en/quests/4701"
+  },
+  "4724": {
+   "faction": "HORDE",
+   "title": "The Pack Mistress",
+   "dungeon": "Upper Blackrock Spire / Lower Blackrock Spire",
+   "source": "https://wowf.io/en/quests/4724"
+  },
+  "4764": {
+   "faction": "ALLIANCE",
+   "title": "Doomrigger's Clasp",
+   "dungeon": "Upper Blackrock Spire / Lower Blackrock Spire",
+   "source": "https://wowf.io/en/quests/4764"
+  },
+  "4766": {
+   "faction": "ALLIANCE",
+   "title": "Mayara Brightwing",
+   "dungeon": "Upper Blackrock Spire / Lower Blackrock Spire",
+   "source": "https://wowf.io/en/quests/4766"
+  },
+  "4768": {
+   "faction": "HORDE",
+   "title": "The Darkstone Tablet",
+   "dungeon": "Upper Blackrock Spire / Lower Blackrock Spire",
+   "source": "https://wowf.io/en/quests/4768"
+  },
+  "4769": {
+   "faction": "HORDE",
+   "title": "Vivian Lagrave and the Darkstone Tablet",
+   "dungeon": "Upper Blackrock Spire / Lower Blackrock Spire",
+   "source": "https://wowf.io/en/quests/4769",
+   "note": "classicdb (Classic) says BOTH; Forever sources agree on HORDE"
+  },
+  "4903": {
+   "faction": "HORDE",
+   "title": "Warlord's Command",
+   "dungeon": "Upper Blackrock Spire / Lower Blackrock Spire",
+   "source": "https://wowf.io/en/quests/4903"
+  },
+  "4974": {
+   "faction": "HORDE",
+   "title": "For The Horde!",
+   "dungeon": "Upper Blackrock Spire / Lower Blackrock Spire",
+   "source": "https://wowf.io/en/quests/4974"
+  },
+  "4981": {
+   "faction": "HORDE",
+   "title": "Operative Bijou",
+   "dungeon": "Upper Blackrock Spire / Lower Blackrock Spire",
+   "source": "https://wowf.io/en/quests/4981",
+   "note": "classicdb (Classic) says BOTH; Forever sources agree on HORDE"
+  },
+  "4982": {
+   "faction": "HORDE",
+   "title": "Bijou's Belongings",
+   "dungeon": "Upper Blackrock Spire / Lower Blackrock Spire",
+   "source": "https://wowf.io/en/quests/4982",
+   "note": "Warcraft Tavern lists quest 4982 under both its Alliance and Horde sections (its Alliance entry looks like an ID slip for 5001). wowf.io and classicdb (Classic; Horde races only) say Horde; foreverchanges does not list 4982."
+  },
+  "4983": {
+   "faction": "HORDE",
+   "title": "Bijou's Reconnaissance Report",
+   "dungeon": "Upper Blackrock Spire / Lower Blackrock Spire",
+   "source": "https://wowf.io/en/quests/4983",
+   "note": "classicdb (Classic) says BOTH; Forever sources agree on HORDE"
+  },
+  "5002": {
+   "faction": "ALLIANCE",
+   "title": "Message to Maxwell",
+   "dungeon": "Upper Blackrock Spire / Lower Blackrock Spire",
+   "source": "https://wowf.io/en/quests/5002"
+  },
+  "5081": {
+   "faction": "ALLIANCE",
+   "title": "Maxwell's Mission",
+   "dungeon": "Upper Blackrock Spire / Lower Blackrock Spire",
+   "source": "https://wowf.io/en/quests/5081"
+  },
+  "5102": {
+   "faction": "ALLIANCE",
+   "title": "General Drakkisath's Demise",
+   "dungeon": "Upper Blackrock Spire / Lower Blackrock Spire",
+   "source": "https://wowf.io/en/quests/5102"
+  },
+  "5341": {
+   "faction": "HORDE",
+   "title": "Barov Family Fortune",
+   "dungeon": "Scholomance",
+   "source": "https://wowf.io/en/quests/5341"
+  },
+  "5343": {
+   "faction": "ALLIANCE",
+   "title": "Barov Family Fortune",
+   "dungeon": "Scholomance",
+   "source": "https://wowf.io/en/quests/5343"
+  },
+  "5722": {
+   "faction": "HORDE",
+   "title": "Searching for the Lost Satchel",
+   "dungeon": "Ragefire Chasm",
+   "source": "https://www.method.gg/wow-forever/dungeons/ragefire-chasm",
+   "note": "WT agrees"
+  },
+  "5723": {
+   "faction": "HORDE",
+   "title": "Testing an Enemy's Strength",
+   "dungeon": "Ragefire Chasm",
+   "source": "https://www.method.gg/wow-forever/dungeons/ragefire-chasm",
+   "note": "WT agrees"
+  },
+  "5724": {
+   "faction": "HORDE",
+   "title": "Returning the Lost Satchel",
+   "dungeon": "Ragefire Chasm",
+   "source": "https://www.warcrafttavern.com/forever/guides/ragefire-chasm-quests/"
+  },
+  "5725": {
+   "faction": "HORDE",
+   "title": "The Power to Destroy...",
+   "dungeon": "Ragefire Chasm",
+   "source": "https://www.method.gg/wow-forever/dungeons/ragefire-chasm",
+   "note": "WT agrees"
+  },
+  "5728": {
+   "faction": "HORDE",
+   "title": "Hidden Enemies",
+   "dungeon": "Ragefire Chasm",
+   "source": "https://www.method.gg/wow-forever/dungeons/ragefire-chasm",
+   "note": "Both guides: RFC quests are Horde only. Chain starts with Thrall (5726); WT lists 5726-5730."
+  },
+  "5761": {
+   "faction": "HORDE",
+   "title": "Slaying the Beast",
+   "dungeon": "Ragefire Chasm",
+   "source": "https://www.method.gg/wow-forever/dungeons/ragefire-chasm",
+   "note": "WT agrees"
+  },
+  "6163": {
+   "faction": "HORDE",
+   "title": "Ramstein",
+   "dungeon": "Stratholme: Dead / Stratholme: Live",
+   "source": "https://wowf.io/en/quests/6163"
+  },
+  "6502": {
+   "faction": "ALLIANCE",
+   "title": "Drakefire Amulet",
+   "dungeon": "Upper Blackrock Spire / Lower Blackrock Spire",
+   "source": "https://wowf.io/en/quests/6502"
+  },
+  "6521": {
+   "faction": "HORDE",
+   "title": "An Unholy Alliance",
+   "dungeon": "Razorfen Downs",
+   "source": "https://wow.gg/guides/razorfen-downs",
+   "note": "WT and rankedboost agree (Varimathras, Undercity)"
+  },
+  "6522": {
+   "faction": "HORDE",
+   "title": "An Unholy Alliance",
+   "dungeon": "Razorfen Downs",
+   "source": "https://wow.gg/guides/razorfen-downs",
+   "note": "Item-started (Small Scroll from RFK); WT and wow.gg list it under Razorfen Kraul"
+  },
+  "6562": {
+   "faction": "HORDE",
+   "title": "Trouble in the Deeps",
+   "dungeon": "Blackfathom Deeps",
+   "source": "https://warcraft.wiki.gg/wiki/Trouble_in_the_Deeps",
+   "note": "Classic source only (warcraft.wiki.gg; Tsunaman giver). Not listed in Forever guides."
+  },
+  "6563": {
+   "faction": "HORDE",
+   "title": "The Essence of Aku'Mai",
+   "dungeon": "Blackfathom Deeps",
+   "source": "https://www.method.gg/wow-forever/dungeons/blackfathom-deeps",
+   "note": "WT agrees"
+  },
+  "6564": {
+   "faction": "HORDE",
+   "title": "Allegiance to the Old Gods",
+   "dungeon": "Blackfathom Deeps",
+   "source": "https://www.warcrafttavern.com/forever/guides/blackfathom-deeps-quests/",
+   "note": "WT lists 6564 as Horde; warcraft.wiki.gg (Classic) also Horde, starts from Damp Note."
+  },
+  "6565": {
+   "faction": "HORDE",
+   "title": "Allegiance to the Old Gods",
+   "dungeon": "Blackfathom Deeps",
+   "source": "https://www.method.gg/wow-forever/dungeons/blackfathom-deeps",
+   "note": "Method lists 6565 under Horde"
+  },
+  "6569": {
+   "faction": "HORDE",
+   "title": "Oculus Illusions",
+   "dungeon": "Upper Blackrock Spire / Lower Blackrock Spire",
+   "source": "https://wowf.io/en/quests/6569",
+   "note": "classicdb (Classic) says BOTH; Forever sources agree on HORDE"
+  },
+  "6602": {
+   "faction": "HORDE",
+   "title": "Blood of the Black Dragon Champion",
+   "dungeon": "Upper Blackrock Spire / Lower Blackrock Spire",
+   "source": "https://wowf.io/en/quests/6602",
+   "note": "classicdb (Classic) says BOTH; Forever sources agree on HORDE"
+  },
+  "6921": {
+   "faction": "HORDE",
+   "title": "Amongst the Ruins",
+   "dungeon": "Blackfathom Deeps",
+   "source": "https://www.method.gg/wow-forever/dungeons/blackfathom-deeps",
+   "note": "WT also Horde (by title; WT's ID 908 looks wrong)"
+  },
+  "7029": {
+   "faction": "HORDE",
+   "title": "Vyletongue Corruption",
+   "dungeon": "Maraudon",
+   "source": "https://www.warcrafttavern.com/forever/guides/maraudon-quests/",
+   "note": "Vark Battlescar, Shadowprey Village. Conquestcapped agrees."
+  },
+  "7041": {
+   "faction": "ALLIANCE",
+   "title": "Vyletongue Corruption",
+   "dungeon": "Maraudon",
+   "source": "https://www.warcrafttavern.com/forever/guides/maraudon-quests/",
+   "note": "Talendria, Nijel's Point. Conquestcapped agrees."
+  },
+  "7068": {
+   "faction": "HORDE",
+   "title": "Shadowshard Fragments",
+   "dungeon": "Maraudon",
+   "source": "https://www.warcrafttavern.com/forever/guides/maraudon-quests/",
+   "note": "Uthel'nay, Orgrimmar. Conquestcapped agrees."
+  },
+  "7070": {
+   "faction": "ALLIANCE",
+   "title": "Shadowshard Fragments",
+   "dungeon": "Maraudon",
+   "source": "https://www.warcrafttavern.com/forever/guides/maraudon-quests/",
+   "note": "Archmage Tervosh, Theramore. Conquestcapped agrees."
+  },
+  "7201": {
+   "faction": "HORDE",
+   "title": "The Last Element",
+   "dungeon": "Blackrock Depths",
+   "source": "https://wowf.io/en/quests/7201"
+  },
+  "7481": {
+   "faction": "HORDE",
+   "title": "Elven Legends",
+   "dungeon": "Dire Maul: East / Dire Maul: West / Dire Maul: North",
+   "source": "https://wowf.io/en/quests/7481"
+  },
+  "7482": {
+   "faction": "ALLIANCE",
+   "title": "Elven Legends",
+   "dungeon": "Dire Maul: East / Dire Maul: West / Dire Maul: North",
+   "source": "https://wowf.io/en/quests/7482"
+  },
+  "7488": {
+   "faction": "ALLIANCE",
+   "title": "Lethtendris's Web",
+   "dungeon": "Dire Maul: East / Dire Maul: West / Dire Maul: North",
+   "source": "https://wowf.io/en/quests/7488",
+   "note": "Sources disagree: wowf.io=ALLIANCE; foreverchanges=BOTH; warcrafttavern=ALLIANCE | foreverchanges lists only one Lethtendris's Web (7488) with both crests; wowf.io, Warcraft Tavern and classicdb split it 7488 Alliance / 7489 Horde. wowforeverguides: 'Each faction'."
+  },
+  "7489": {
+   "faction": "HORDE",
+   "title": "Lethtendris's Web",
+   "dungeon": "Dire Maul: East / Dire Maul: West / Dire Maul: North",
+   "source": "https://wowf.io/en/quests/7489",
+   "note": "wowforeverguides: 'Each faction'."
+  },
+  "7492": {
+   "faction": "HORDE",
+   "title": "Camp Mojache",
+   "dungeon": "Dire Maul: East / Dire Maul: West / Dire Maul: North",
+   "source": "https://wowf.io/en/quests/7492",
+   "note": "classicdb (Classic) says BOTH; Forever sources agree on HORDE"
+  },
+  "7494": {
+   "faction": "ALLIANCE",
+   "title": "Feathermoon Stronghold",
+   "dungeon": "Dire Maul: East / Dire Maul: West / Dire Maul: North",
+   "source": "https://wowf.io/en/quests/7494"
+  },
+  "92422": {
+   "faction": "HORDE",
+   "title": "The Wrath of Rath'mael",
+   "dungeon": "Ruins of Lordaeron",
+   "source": "https://www.method.gg/wow-forever/dungeons/ruins-of-lordaeron",
+   "note": "WT, Method and gamer-guides all list it as Horde (Deathguard Kristof, Tirisfal)."
+  },
+  "95204": {
+   "faction": "HORDE",
+   "title": "Crest of Lordaeron",
+   "dungeon": "Ruins of Lordaeron",
+   "source": "https://warcraft.wiki.gg/wiki/Crest_of_Lordaeron",
+   "note": "Method and wiki: 95204 = Horde (Oran Snakewrithe, Undercity). Warcraft Tavern says Alliance (IDs swapped). No source says BOTH."
+  },
+  "95663": {
+   "faction": "HORDE",
+   "title": "Dragonmaw Rumors",
+   "dungeon": "Excavation Site: Wetlands",
+   "source": "https://warcraft.wiki.gg/wiki/Excavation_Site:_Wetlands",
+   "note": "Wiki lists it in the Horde chain Dragonmaw Rumors -> Open the Maw; Method: breadcrumb from Zaruk in Hammerfall."
+  },
+  "95682": {
+   "faction": "HORDE",
+   "title": "Open the Maw",
+   "dungeon": "Excavation Site: Wetlands",
+   "source": "https://warcraft.wiki.gg/wiki/Open_the_Maw",
+   "note": "WT and Method also Horde"
+  },
+  "95737": {
+   "faction": "ALLIANCE",
+   "title": "Seeking Caitlin",
+   "dungeon": "Excavation Site: Wetlands",
+   "source": "https://warcraft.wiki.gg/wiki/Excavation_Site:_Wetlands",
+   "note": "Wiki lists it in the Alliance chain; Method: breadcrumb from Llana in Astranaar."
+  },
+  "95772": {
+   "faction": "ALLIANCE",
+   "title": "Songblade Search",
+   "dungeon": "Excavation Site: Wetlands",
+   "source": "https://www.warcrafttavern.com/forever/guides/excavation-site-wetlands-quests/",
+   "note": "Method and wiki agree (Dorin Songblade, Lakeshire)"
+  },
+  "95795": {
+   "faction": "ALLIANCE",
+   "title": "Fallen in the Fen",
+   "dungeon": "Excavation Site: Wetlands",
+   "source": "https://warcraft.wiki.gg/wiki/Fallen_in_the_Fen",
+   "note": "Follow-up to Songblade Search (Alliance)"
+  },
+  "96393": {
+   "faction": "ALLIANCE",
+   "title": "Old Ironforge Incursion",
+   "dungeon": "Hall of Thanes",
+   "source": "https://warcraft.wiki.gg/wiki/Old_Ironforge_Incursion",
+   "note": "WT, gamer-guides and Method also say Alliance."
+  },
+  "96403": {
+   "faction": "ALLIANCE",
+   "title": "Important Heirlooms",
+   "dungeon": "Hall of Thanes",
+   "source": "https://www.method.gg/wow-forever/dungeons/hall-of-thanes",
+   "note": "WT, gamer-guides, Method and warcraft.wiki.gg all say Alliance."
+  },
+  "98815": {
+   "faction": "ALLIANCE",
+   "title": "Highland Hides",
+   "dungeon": "Excavation Site: Wetlands",
+   "source": "https://www.warcrafttavern.com/forever/guides/excavation-site-wetlands-quests/",
+   "note": "Method and wiki agree (Menethil Harbor giver)"
+  }
+ }
+}
