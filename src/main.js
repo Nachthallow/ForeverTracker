@@ -23,6 +23,9 @@ const LEVEL_GAP_FLAG = 5;
 const REGION_ORDER = ["us", "eu", "kr", "tw"];
 // A player this many levels below a dungeon is "close".
 const CLOSE_LEVELS = 3;
+// A quest turns grey this many levels below the character (Efficient Games
+// game_rules.trivialRange gives 5 at every level players have read it).
+const GREY_LEVELS = 5;
 
 const els = {
   board: document.getElementById("board"),
@@ -210,6 +213,9 @@ function standing(unit, d) {
   const inRange = unit.characters.filter((c) => (c.level ?? 0) >= d.min_level && (c.level ?? 0) <= d.max_level);
   const notDone = inRange.filter((c) => !dungeonDone(c, d));
   if (notDone.length) return { kind: "go", character: notDone[0] };
+  // Above the range but with quests there that are not grey yet: still worth going.
+  const over = unit.characters.filter((c) => (c.level ?? 0) > d.max_level && !dungeonDone(c, d) && worthwhileQuests(c, d) > 0);
+  if (over.length) return { kind: "worth", character: over[0] };
   if (inRange.length) return { kind: "done", character: inRange[0] };
   const below = unit.characters
     .filter((c) => (c.level ?? 0) < d.min_level)
@@ -221,8 +227,18 @@ function standing(unit, d) {
   return { kind: past ? "past" : "far", character: unit.characters[0] };
 }
 
-const STANDING_TEXT = { go: "Can go", done: "Done", past: "Past it" };
-const STANDING_ORDER = { go: 0, close: 1, done: 2, past: 3, far: 4 };
+const STANDING_TEXT = { go: "Can go", worth: "Quests left", done: "Done", past: "Past it" };
+const STANDING_ORDER = { go: 0, worth: 1, close: 2, done: 3, past: 4, far: 5 };
+const GOING = new Set(["go", "worth"]);
+
+// Open quests in this dungeon that are not grey for the character yet.
+function worthwhileQuests(c, d) {
+  return questsFor(c, d).filter((x) => x.kind !== "done" && !isGrey(c, x.q)).length;
+}
+
+function isGrey(c, q) {
+  return q.level != null && (c.level ?? 0) - q.level >= GREY_LEVELS;
+}
 
 // Quests ---------------------------------------------------------------------------
 
@@ -273,7 +289,7 @@ function questSummary(list) {
 const QUEST_TEXT = { done: "Done", log: "In log", pickup: "Pick up", blocked: "Pre-quest" };
 const QUEST_ORDER = { pickup: 0, blocked: 1, log: 2, done: 3 };
 
-function questList(list) {
+function questList(list, c) {
   if (list.length === 0) return el("p", { class: "quest-empty" }, "No dungeon quests known for this one.");
   // What to act on first; quests that cannot be shared before shareable ones.
   const sorted = [...list].sort((a, b) =>
@@ -293,6 +309,7 @@ function questList(list) {
           { class: "q-title" },
           x.q.title,
           x.kind !== "done" && x.q.shareable === false && el("span", { class: "q-flag" }, "Not shareable"),
+          x.kind !== "done" && isGrey(c, x.q) && el("span", { class: "q-flag q-flag-grey" }, "Grey"),
           x.kind === "blocked" &&
             el("span", { class: "q-step" }, `${x.missing.inLog ? "Finish" : "First"}: ${x.missing.title ?? `quest ${x.missing.id}`}`),
           x.q.giver && x.kind === "pickup" && el("span", { class: "q-step" }, `From ${x.q.giver}`),
@@ -333,7 +350,7 @@ function playerRow(unit, s, d) {
       el(
         "div",
         { class: "pr-body" },
-        questList(list),
+        questList(list, c),
         el("a", { class: "pr-link", href: characterUrl(c) }, `Open ${fullName(c)}`),
       ),
     ),
@@ -341,7 +358,7 @@ function playerRow(unit, s, d) {
 }
 
 function dungeonCard(d, rows) {
-  const canGo = rows.filter((r) => r.s.kind === "go").length;
+  const canGo = rows.filter((r) => GOING.has(r.s.kind)).length;
   const shown = rows
     .filter((r) => r.s.kind !== "far")
     .sort((a, b) => STANDING_ORDER[a.s.kind] - STANDING_ORDER[b.s.kind]);
@@ -408,8 +425,8 @@ function renderBoard() {
     const cards = [];
     for (const d of dungeons) {
       const rows = units.map((unit) => ({ unit, s: standing(unit, d) }));
-      const inRange = rows.filter((r) => r.s.kind === "go" || r.s.kind === "done").length;
-      const canGo = rows.filter((r) => r.s.kind === "go").length;
+      const inRange = rows.filter((r) => GOING.has(r.s.kind) || r.s.kind === "done").length;
+      const canGo = rows.filter((r) => GOING.has(r.s.kind)).length;
       // Worth showing: at least two players are in range, and someone still needs it.
       if (inRange >= 2 && canGo >= 1) cards.push({ d, rows, canGo });
     }

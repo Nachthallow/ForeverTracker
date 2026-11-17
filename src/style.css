@@ -894,6 +894,7 @@ details summary {
 }
 
 .pr-go .pr-status { color: var(--success); }
+.pr-worth .pr-status { color: var(--success); }
 .pr-close .pr-status { color: var(--gold-heading); }
 .pr-done .pr-status,
 .pr-past .pr-status,
@@ -988,4 +989,9 @@ details summary {
     grid-template-columns: 1fr;
     gap: 0;
   }
+}
+
+.q-flag-grey {
+  color: var(--muted);
+  border-color: var(--muted);
 }

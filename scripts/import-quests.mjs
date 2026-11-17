@@ -5,7 +5,7 @@
 // Data from Efficient Games (https://efficient.games), licensed under CC BY 4.0.
 // Changed: reduced to dungeon quests and their prerequisites.
 
-import { mkdir, writeFile } from "node:fs/promises";
+import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY } from "../src/config.js";
 
 const REPO = "https://raw.githubusercontent.com/JIVESCORP/eg-link-output-wowf/main/data";
@@ -18,6 +18,10 @@ const OUT = new URL("../supabase/seed-data/dungeon_quests.sql", import.meta.url)
 const ALLIANCE_MASK = BigInt("0x55155555b1354c4d");
 const HORDE_MASK = BigInt("0xaa2aaaaa4e0ab3b2");
 const MAX_CHAIN_DEPTH = 10;
+
+// Faction corrections for quests the game data marks open to every race but
+// that published guides give to one faction. Each entry names its source.
+const FIXES = JSON.parse(await readFile(new URL("./quest-faction-fixes.json", import.meta.url), "utf8")).quests;
 
 async function getJson(url) {
   const res = await fetch(url);
@@ -105,7 +109,7 @@ const lines = [
 
 const questValues = dungeonQuests.map(([id, q]) =>
   `(${id}, ${q.zoneAreaId}, ${sql(q.title)}, ${sql(q.level ?? null)}, ${sql(q.minLevel ?? null)}, ` +
-  `${sql(factionOf(q.raceMask))}, ${sql(shareableOf(scan.pushable?.[id]))}, ` +
+  `${sql(FIXES[id]?.faction ?? factionOf(q.raceMask))}, ${sql(shareableOf(scan.pushable?.[id]))}, ` +
   `${sql(givers[id] ? [...givers[id]].join(", ") : null)}, ${sql(build)})`
 );
 lines.push(
@@ -129,5 +133,7 @@ await writeFile(OUT, lines.join("\n"));
 
 const perArea = {};
 for (const [, q] of dungeonQuests) perArea[q.zoneAreaId] = (perArea[q.zoneAreaId] ?? 0) + 1;
+const fixed = dungeonQuests.filter(([id]) => FIXES[id]).length;
+console.log(`${fixed} faction corrections applied from scripts/quest-faction-fixes.json.`);
 console.log(`${dungeonQuests.length} dungeon quests in ${Object.keys(perArea).length} areas, ${prereqs.size} chain links.`);
 console.log(`Wrote ${OUT.pathname}`);
