@@ -74,6 +74,7 @@ export type CharacterRow = {
   avatar_url: string | null;
   equipment: unknown;
   professions: unknown;
+  encounters: unknown;
   last_login_at: string | null;
 };
 
@@ -90,13 +91,15 @@ export async function fetchCharacter(region: Region, slug: string) {
   // and there is no point making the other five calls.
   const base = await get(region, slug, "", token);
 
-  const [equipment, professions, quests, completed, media] = await Promise.all([
+  const [equipment, professions, quests, completed, media, encounters] = await Promise.all([
     get(region, slug, "equipment", token),
     get(region, slug, "professions", token),
     get(region, slug, "quests", token),
     get(region, slug, "quests/completed", token),
     // A missing render should not fail the whole sync.
     get(region, slug, "character-media", token).catch(() => null),
+    // Dungeon completions, if Forever reports them. Optional for now.
+    get(region, slug, "encounters/dungeons", token).catch(() => null),
   ]);
 
   const character: CharacterRow = {
@@ -118,6 +121,7 @@ export async function fetchCharacter(region: Region, slug: string) {
     avatar_url: media?.assets?.find((a: { key: string }) => a.key === "avatar")?.value ?? null,
     equipment,
     professions,
+    encounters,
     last_login_at: base.last_login_timestamp ? new Date(base.last_login_timestamp).toISOString() : null,
   };
 
