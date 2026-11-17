@@ -280,6 +280,26 @@ Each phase ends with something a friend can use. Stop after each one.
 - Check the filtered list against Scott's in-game journal before calling it
   done (numbers in the data section below).
 
+Phase C findings (2026-11-17):
+
+- Dungeon completion comes from the Spelunker achievements (62031, 62032,
+  62033); each child criterion is one dungeon (`dungeons.criteria_id`). The
+  Stockade is in none of them; all its quests done counts as done instead.
+  `encounters/dungeons` answers with nothing for Forever, and the journal
+  API is empty.
+- A dungeon quest's area is its `zoneAreaId`; Blizzard's quest API names
+  every one (`dungeons.area_id`). Wings share an area and its quests.
+- Faction: raceMask `55155555b1354c4d` is Alliance, `aa2aaaaa4e0ab3b2` Horde
+  (checked against Blizzard's quest requirements). Some Horde quests carry
+  the all-races mask, so totals run high for Alliance (BFD 9 vs Naowh 6,
+  Excavation 11 vs 9, Gnomeregan 16 vs 11). Dalaran and Stockade match.
+- `quest_prerequisites.json` is not real prerequisites (it is what a few
+  characters did earlier). Chains come from `nextQuestId` instead.
+- Shareable is `quest_scan.pushable`. Quests given outside dungeon areas
+  (Blackrock Mountain, Stormwind ...) are not imported yet.
+- Re-import for a new build: `node scripts/import-quests.mjs`, then
+  `npx supabase db query --remote -f supabase/seed-data/dungeon_quests.sql`.
+
 ### Phase D: crafting for each other
 
 - From known recipes: for any character, "who in the group can make this"

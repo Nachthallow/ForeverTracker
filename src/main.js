@@ -44,6 +44,24 @@ const els = {
 let characters = [];
 let gains = new Map();
 let dungeons = [];
+let questsByArea = new Map(); // area_id -> dungeon quests
+let prereqsOf = new Map(); // quest_id -> quests that come before it
+let questLogs = new Map(); // character_id -> Map(quest_id -> state)
+
+// Reads a whole table past the API's 1000-row page limit.
+async function fetchAll(table, columns) {
+  const PAGE = 1000;
+  const rows = [];
+  for (let from = 0; ; from += PAGE) {
+    const { data, error } = await db.from(table).select(columns).range(from, from + PAGE - 1);
+    if (error) {
+      console.error(table, error);
+      return rows;
+    }
+    rows.push(...data);
+    if (data.length < PAGE) return rows;
+  }
+}
 
 const byLevelDesc = (a, b) => (b.level ?? 0) - (a.level ?? 0) || fullName(a).localeCompare(fullName(b));
 
@@ -181,10 +199,17 @@ function renderLevelLine() {
 // How one player stands with one dungeon, using whichever of their characters
 // suits it best: one in range that has not done it, else one in range, else
 // the closest one below it.
+function dungeonDone(c, d) {
+  if (d.criteria_id != null) return Boolean(c.dungeons_done?.includes(d.criteria_id));
+  // Blizzard does not report this dungeon (The Stockade): all its quests done counts instead.
+  const sum = questSummary(questsFor(c, d));
+  return sum.total > 0 && sum.done === sum.total;
+}
+
 function standing(unit, d) {
   const inRange = unit.characters.filter((c) => (c.level ?? 0) >= d.min_level && (c.level ?? 0) <= d.max_level);
-  const notDone = inRange.filter((c) => d.criteria_id == null || !c.dungeons_done?.includes(d.criteria_id));
-  if (notDone.length) return { kind: "ready", character: notDone[0] };
+  const notDone = inRange.filter((c) => !dungeonDone(c, d));
+  if (notDone.length) return { kind: "go", character: notDone[0] };
   if (inRange.length) return { kind: "done", character: inRange[0] };
   const below = unit.characters
     .filter((c) => (c.level ?? 0) < d.min_level)
@@ -196,26 +221,127 @@ function standing(unit, d) {
   return { kind: past ? "past" : "far", character: unit.characters[0] };
 }
 
-const STANDING_TEXT = { ready: "Ready", done: "Done", past: "Past it" };
-const STANDING_ORDER = { ready: 0, close: 1, done: 2, past: 3, far: 4 };
+const STANDING_TEXT = { go: "Can go", done: "Done", past: "Past it" };
+const STANDING_ORDER = { go: 0, close: 1, done: 2, past: 3, far: 4 };
 
-function playerPill(unit, s) {
+// Quests ---------------------------------------------------------------------------
+
+function questState(c, questId) {
+  return questLogs.get(c.id)?.get(questId) ?? null;
+}
+
+// The earliest pre-quest this character still has to do before questId, or
+// null when nothing blocks it. Several quests leading to one are alternatives
+// (often one per faction), so one done is enough.
+function firstMissingStep(c, questId, depth = 0) {
+  const before = prereqsOf.get(questId);
+  if (!before?.length || depth > 10) return null;
+  if (before.some((p) => questState(c, p.requires_quest_id) === "completed")) return null;
+  const step = before[0];
+  return firstMissingStep(c, step.requires_quest_id, depth + 1) ??
+    { id: step.requires_quest_id, title: step.requires_title, inLog: questState(c, step.requires_quest_id) === "in_progress" };
+}
+
+// The dungeon's quests for this character's faction. Quests that share a
+// title (one per item reward, one per faction) count as one.
+function questsFor(c, d) {
+  const groups = new Map();
+  for (const q of questsByArea.get(d.area_id) ?? []) {
+    if (q.faction && q.faction !== c.faction) continue;
+    if (!groups.has(q.title)) groups.set(q.title, []);
+    groups.get(q.title).push(q);
+  }
+  const RANK = { done: 0, log: 1, pickup: 2, blocked: 3 };
+  return [...groups.values()].map((variants) => {
+    const options = variants.map((q) => {
+      const state = questState(c, q.quest_id);
+      if (state === "completed") return { q, kind: "done" };
+      if (state === "in_progress") return { q, kind: "log" };
+      const missing = firstMissingStep(c, q.quest_id);
+      return missing ? { q, kind: "blocked", missing } : { q, kind: "pickup" };
+    });
+    return options.sort((a, b) => RANK[a.kind] - RANK[b.kind])[0];
+  });
+}
+
+function questSummary(list) {
+  const done = list.filter((x) => x.kind === "done").length;
+  const log = list.filter((x) => x.kind === "log").length;
+  return { done, log, total: list.length, open: list.length - done - log };
+}
+
+const QUEST_TEXT = { done: "Done", log: "In log", pickup: "Pick up", blocked: "Pre-quest" };
+const QUEST_ORDER = { pickup: 0, blocked: 1, log: 2, done: 3 };
+
+function questList(list) {
+  if (list.length === 0) return el("p", { class: "quest-empty" }, "No dungeon quests known for this one.");
+  // What to act on first; quests that cannot be shared before shareable ones.
+  const sorted = [...list].sort((a, b) =>
+    QUEST_ORDER[a.kind] - QUEST_ORDER[b.kind] || Number(a.q.shareable !== false) - Number(b.q.shareable !== false) ||
+    a.q.title.localeCompare(b.q.title)
+  );
+  return el(
+    "ul",
+    { class: "quest-rows" },
+    sorted.map((x) =>
+      el(
+        "li",
+        { class: `quest-row q-${x.kind}` },
+        el("span", { class: "q-state" }, QUEST_TEXT[x.kind]),
+        el(
+          "span",
+          { class: "q-title" },
+          x.q.title,
+          x.kind !== "done" && x.q.shareable === false && el("span", { class: "q-flag" }, "Not shareable"),
+          x.kind === "blocked" &&
+            el("span", { class: "q-step" }, `${x.missing.inLog ? "Finish" : "First"}: ${x.missing.title ?? `quest ${x.missing.id}`}`),
+          x.q.giver && x.kind === "pickup" && el("span", { class: "q-step" }, `From ${x.q.giver}`),
+        ),
+      )
+    ),
+  );
+}
+
+// One player in a dungeon card: a summary row that opens their quest list.
+function playerRow(unit, s, d) {
   const c = s.character;
   // Name the character when it is not the main, so alts are clear.
   let label = fullName(c);
   if (unit.player) label = c === unit.characters[0] ? unit.player : `${unit.player} (${c.first_name})`;
   const status = s.kind === "close" ? `${s.gap} to go` : STANDING_TEXT[s.kind];
+  const list = questsFor(c, d);
+  const sum = questSummary(list);
   return el(
     "li",
-    { class: `pill pill-${s.kind}` },
-    el("a", { class: "pill-name", href: characterUrl(c) }, label),
-    el("span", { class: "pill-level" }, c.level ?? "?"),
-    el("span", { class: "pill-status" }, status),
+    { class: `player-row pr-${s.kind}` },
+    el(
+      "details",
+      {},
+      el(
+        "summary",
+        {},
+        el("span", { class: "pr-name" }, label),
+        el("span", { class: "pr-level" }, c.level ?? "?"),
+        el(
+          "span",
+          { class: "pr-quests", title: "Quests done out of all quests for this dungeon" },
+          sum.total ? `${sum.done}/${sum.total}` : "",
+          sum.log > 0 && el("span", { class: "pr-log" }, ` +${sum.log}`),
+        ),
+        el("span", { class: "pr-status" }, status),
+      ),
+      el(
+        "div",
+        { class: "pr-body" },
+        questList(list),
+        el("a", { class: "pr-link", href: characterUrl(c) }, `Open ${fullName(c)}`),
+      ),
+    ),
   );
 }
 
 function dungeonCard(d, rows) {
-  const ready = rows.filter((r) => r.s.kind === "ready").length;
+  const canGo = rows.filter((r) => r.s.kind === "go").length;
   const shown = rows
     .filter((r) => r.s.kind !== "far")
     .sort((a, b) => STANDING_ORDER[a.s.kind] - STANDING_ORDER[b.s.kind]);
@@ -225,7 +351,12 @@ function dungeonCard(d, rows) {
     el(
       "header",
       { class: "dungeon-head" },
-      el("h3", { class: "dungeon-name" }, d.name),
+      el(
+        "div",
+        {},
+        el("h3", { class: "dungeon-name" }, d.name),
+        el("p", { class: "dungeon-count" }, `${canGo} of ${rows.length} can go`),
+      ),
       el(
         "div",
         { class: "dungeon-tags" },
@@ -233,9 +364,17 @@ function dungeonCard(d, rows) {
         d.is_new && el("span", { class: "tag-new" }, "New"),
       ),
     ),
-    el("p", { class: "dungeon-count" }, el("strong", {}, ready), ` of ${rows.length} ready`),
-    el("ul", { class: "pills" }, shown.map((r) => playerPill(r.unit, r.s))),
-    d.criteria_id == null && el("p", { class: "dungeon-note" }, "Blizzard does not report completions for this one."),
+    el(
+      "div",
+      { class: "pr-head", "aria-hidden": "true" },
+      el("span", {}, "Player"),
+      el("span", {}, "Lvl"),
+      el("span", {}, "Quests"),
+      el("span", {}, ""),
+    ),
+    el("ul", { class: "player-rows" }, shown.map((r) => playerRow(r.unit, r.s, d))),
+    d.criteria_id == null &&
+      el("p", { class: "dungeon-note" }, "Blizzard does not report this dungeon, so all its quests done counts as done."),
     d.faction_note && el("p", { class: "dungeon-note" }, d.faction_note),
   );
 }
@@ -243,6 +382,12 @@ function dungeonCard(d, rows) {
 function lineTitle(units) {
   const first = units[0].characters[0];
   return `${first.region.toUpperCase()}, ${titleCase(first.faction)}, ${first.ruleset ?? "unknown ruleset"}`;
+}
+
+// Dungeons are grouped in bands of ten levels by where their range starts.
+function bandOf(d) {
+  const low = Math.floor(d.min_level / 10) * 10;
+  return { key: low, label: `Levels ${low}–${low + 9}` };
 }
 
 function renderBoard() {
@@ -263,17 +408,37 @@ function renderBoard() {
     const cards = [];
     for (const d of dungeons) {
       const rows = units.map((unit) => ({ unit, s: standing(unit, d) }));
-      const inRange = rows.filter((r) => r.s.kind === "ready" || r.s.kind === "done").length;
-      const ready = rows.filter((r) => r.s.kind === "ready").length;
-      // Worth showing: at least two players can go, and someone still needs it.
-      if (inRange >= 2 && ready >= 1) cards.push({ d, rows, ready });
+      const inRange = rows.filter((r) => r.s.kind === "go" || r.s.kind === "done").length;
+      const canGo = rows.filter((r) => r.s.kind === "go").length;
+      // Worth showing: at least two players are in range, and someone still needs it.
+      if (inRange >= 2 && canGo >= 1) cards.push({ d, rows, canGo });
     }
-    cards.sort((a, b) => b.ready - a.ready || a.d.min_level - b.d.min_level);
     total += cards.length;
 
     let body;
     if (cards.length) {
-      body = el("div", { class: "dungeon-grid" }, cards.map(({ d, rows }) => dungeonCard(d, rows)));
+      const bands = new Map();
+      for (const card of cards) {
+        const band = bandOf(card.d);
+        if (!bands.has(band.key)) bands.set(band.key, { ...band, cards: [] });
+        bands.get(band.key).cards.push(card);
+      }
+      body = [...bands.values()]
+        .sort((a, b) => a.key - b.key)
+        .map((band) =>
+          el(
+            "div",
+            { class: "band" },
+            el("h3", { class: "band-title" }, band.label),
+            el(
+              "div",
+              { class: "dungeon-grid" },
+              band.cards
+                .sort((a, b) => b.canGo - a.canGo || a.d.min_level - b.d.min_level)
+                .map(({ d, rows }) => dungeonCard(d, rows)),
+            ),
+          )
+        );
     } else {
       const mid = median(units.map(top).sort((a, b) => a - b));
       const next = dungeons.find((d) => d.min_level > mid);
@@ -293,8 +458,8 @@ function renderBoard() {
   });
 
   els.boardSummary.textContent = total === 1
-    ? "1 dungeon fits the group and still has someone who needs it."
-    : `${total} dungeons fit the group and still have someone who needs them.`;
+    ? "1 dungeon fits the group and still has someone who needs it. Click a name for their quests."
+    : `${total} dungeons fit the group and still have someone who needs them. Click a name for their quests.`;
   const loners = alone.map((u) => `${unitName(u)} (${lineTitle([u])})`);
   els.board.replaceChildren(
     ...blocks,
@@ -358,14 +523,17 @@ function renderRoster() {
 
 async function load() {
   if (characters.length === 0) els.rosterMessage.textContent = "Loading the roster...";
-  const [chars, gainRows, players, dungeonRows] = await Promise.all([
+  const [chars, gainRows, players, dungeonRows, questRows, prereqRows, logRows] = await Promise.all([
     db.from("characters").select(`${SUMMARY_COLUMNS}, dungeons_done`),
     db.from("level_gains").select("character_id, gained, history_since"),
     loadPlayers(),
     db.from("dungeons")
-      .select("id, name, zone, min_level, max_level, faction_note, is_new, criteria_id")
+      .select("id, name, zone, min_level, max_level, faction_note, is_new, criteria_id, area_id")
       .order("min_level")
       .order("max_level"),
+    fetchAll("dungeon_quests", "quest_id, area_id, title, level, min_level, faction, shareable, giver"),
+    fetchAll("quest_prereqs", "quest_id, requires_quest_id, requires_title"),
+    fetchAll("character_dungeon_quests", "character_id, quest_id, state"),
   ]);
   if (chars.error) {
     els.rosterMessage.textContent = "Could not load the roster. Try reloading the page.";
@@ -375,6 +543,25 @@ async function load() {
   characters = chars.data.map((c) => ({ ...c, player_name: players.get(c.player_id) ?? null }));
   gains = new Map((gainRows.data ?? []).map((g) => [g.character_id, g]));
   dungeons = dungeonRows.data ?? [];
+
+  questsByArea = new Map();
+  for (const q of questRows) {
+    if (!questsByArea.has(q.area_id)) questsByArea.set(q.area_id, []);
+    questsByArea.get(q.area_id).push(q);
+  }
+  prereqsOf = new Map();
+  for (const p of prereqRows) {
+    if (!prereqsOf.has(p.quest_id)) prereqsOf.set(p.quest_id, []);
+    prereqsOf.get(p.quest_id).push(p);
+  }
+  questLogs = new Map();
+  for (const row of logRows) {
+    if (!questLogs.has(row.character_id)) questLogs.set(row.character_id, new Map());
+    const log = questLogs.get(row.character_id);
+    // Completed wins if a repeatable quest shows up as both.
+    if (log.get(row.quest_id) !== "completed") log.set(row.quest_id, row.state);
+  }
+
   fillPlayerList(els.playerList, players);
   renderBoard();
   renderLevelLine();
