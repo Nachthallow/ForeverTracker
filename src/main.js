@@ -21,8 +21,12 @@ import {
 // many levels of the middle of the group.
 const LEVEL_GAP_FLAG = 5;
 const REGION_ORDER = ["us", "eu", "kr", "tw"];
+// A player this many levels below a dungeon is "close".
+const CLOSE_LEVELS = 3;
 
 const els = {
+  board: document.getElementById("board"),
+  boardSummary: document.getElementById("board-summary"),
   levelLine: document.getElementById("level-line"),
   roster: document.getElementById("roster"),
   rosterMessage: document.getElementById("roster-message"),
@@ -39,6 +43,7 @@ const els = {
 
 let characters = [];
 let gains = new Map();
+let dungeons = [];
 
 const byLevelDesc = (a, b) => (b.level ?? 0) - (a.level ?? 0) || fullName(a).localeCompare(fullName(b));
 
@@ -171,6 +176,133 @@ function renderLevelLine() {
   );
 }
 
+// What we can run -------------------------------------------------------------------
+
+// How one player stands with one dungeon, using whichever of their characters
+// suits it best: one in range that has not done it, else one in range, else
+// the closest one below it.
+function standing(unit, d) {
+  const inRange = unit.characters.filter((c) => (c.level ?? 0) >= d.min_level && (c.level ?? 0) <= d.max_level);
+  const notDone = inRange.filter((c) => d.criteria_id == null || !c.dungeons_done?.includes(d.criteria_id));
+  if (notDone.length) return { kind: "ready", character: notDone[0] };
+  if (inRange.length) return { kind: "done", character: inRange[0] };
+  const below = unit.characters
+    .filter((c) => (c.level ?? 0) < d.min_level)
+    .sort((a, b) => (b.level ?? 0) - (a.level ?? 0))[0];
+  if (below && d.min_level - (below.level ?? 0) <= CLOSE_LEVELS) {
+    return { kind: "close", character: below, gap: d.min_level - (below.level ?? 0) };
+  }
+  const past = unit.characters.every((c) => (c.level ?? 0) > d.max_level);
+  return { kind: past ? "past" : "far", character: unit.characters[0] };
+}
+
+const STANDING_TEXT = { ready: "Ready", done: "Done", past: "Past it" };
+const STANDING_ORDER = { ready: 0, close: 1, done: 2, past: 3, far: 4 };
+
+function playerPill(unit, s) {
+  const c = s.character;
+  // Name the character when it is not the main, so alts are clear.
+  let label = fullName(c);
+  if (unit.player) label = c === unit.characters[0] ? unit.player : `${unit.player} (${c.first_name})`;
+  const status = s.kind === "close" ? `${s.gap} to go` : STANDING_TEXT[s.kind];
+  return el(
+    "li",
+    { class: `pill pill-${s.kind}` },
+    el("a", { class: "pill-name", href: characterUrl(c) }, label),
+    el("span", { class: "pill-level" }, c.level ?? "?"),
+    el("span", { class: "pill-status" }, status),
+  );
+}
+
+function dungeonCard(d, rows) {
+  const ready = rows.filter((r) => r.s.kind === "ready").length;
+  const shown = rows
+    .filter((r) => r.s.kind !== "far")
+    .sort((a, b) => STANDING_ORDER[a.s.kind] - STANDING_ORDER[b.s.kind]);
+  return el(
+    "article",
+    { class: d.is_new ? "dungeon new" : "dungeon" },
+    el(
+      "header",
+      { class: "dungeon-head" },
+      el("h3", { class: "dungeon-name" }, d.name),
+      el(
+        "div",
+        { class: "dungeon-tags" },
+        el("span", { class: "range" }, `${d.min_level}–${d.max_level}`),
+        d.is_new && el("span", { class: "tag-new" }, "New"),
+      ),
+    ),
+    el("p", { class: "dungeon-count" }, el("strong", {}, ready), ` of ${rows.length} ready`),
+    el("ul", { class: "pills" }, shown.map((r) => playerPill(r.unit, r.s))),
+    d.criteria_id == null && el("p", { class: "dungeon-note" }, "Blizzard does not report completions for this one."),
+    d.faction_note && el("p", { class: "dungeon-note" }, d.faction_note),
+  );
+}
+
+function lineTitle(units) {
+  const first = units[0].characters[0];
+  return `${first.region.toUpperCase()}, ${titleCase(first.faction)}, ${first.ruleset ?? "unknown ruleset"}`;
+}
+
+function renderBoard() {
+  const allLines = linesOf(characters);
+  const lines = allLines.filter((units) => units.length > 1);
+  const alone = allLines.filter((units) => units.length === 1).map((units) => units[0]);
+
+  if (lines.length === 0) {
+    els.boardSummary.textContent = "";
+    els.board.replaceChildren(
+      el("p", { class: "muted" }, "Dungeons show up here once two or more players share a region, faction and ruleset."),
+    );
+    return;
+  }
+
+  let total = 0;
+  const blocks = lines.map((units) => {
+    const cards = [];
+    for (const d of dungeons) {
+      const rows = units.map((unit) => ({ unit, s: standing(unit, d) }));
+      const inRange = rows.filter((r) => r.s.kind === "ready" || r.s.kind === "done").length;
+      const ready = rows.filter((r) => r.s.kind === "ready").length;
+      // Worth showing: at least two players can go, and someone still needs it.
+      if (inRange >= 2 && ready >= 1) cards.push({ d, rows, ready });
+    }
+    cards.sort((a, b) => b.ready - a.ready || a.d.min_level - b.d.min_level);
+    total += cards.length;
+
+    let body;
+    if (cards.length) {
+      body = el("div", { class: "dungeon-grid" }, cards.map(({ d, rows }) => dungeonCard(d, rows)));
+    } else {
+      const mid = median(units.map(top).sort((a, b) => a - b));
+      const next = dungeons.find((d) => d.min_level > mid);
+      body = el(
+        "p",
+        { class: "muted" },
+        "Nothing fits two or more of you right now that someone still needs.",
+        next ? ` Next up: ${next.name} from level ${next.min_level}.` : "",
+      );
+    }
+    return el(
+      "div",
+      { class: "board-line" },
+      lines.length > 1 && el("h3", { class: "group-title" }, lineTitle(units)),
+      body,
+    );
+  });
+
+  els.boardSummary.textContent = total === 1
+    ? "1 dungeon fits the group and still has someone who needs it."
+    : `${total} dungeons fit the group and still have someone who needs them.`;
+  const loners = alone.map((u) => `${unitName(u)} (${lineTitle([u])})`);
+  els.board.replaceChildren(
+    ...blocks,
+    loners.length > 0 &&
+      el("p", { class: "muted small" }, `Not shown, with nobody to group with yet: ${loners.join("; ")}.`),
+  );
+}
+
 // Characters, by player and region ---------------------------------------------------
 
 function filtered() {
@@ -226,10 +358,14 @@ function renderRoster() {
 
 async function load() {
   if (characters.length === 0) els.rosterMessage.textContent = "Loading the roster...";
-  const [chars, gainRows, players] = await Promise.all([
-    db.from("characters").select(SUMMARY_COLUMNS),
+  const [chars, gainRows, players, dungeonRows] = await Promise.all([
+    db.from("characters").select(`${SUMMARY_COLUMNS}, dungeons_done`),
     db.from("level_gains").select("character_id, gained, history_since"),
     loadPlayers(),
+    db.from("dungeons")
+      .select("id, name, zone, min_level, max_level, faction_note, is_new, criteria_id")
+      .order("min_level")
+      .order("max_level"),
   ]);
   if (chars.error) {
     els.rosterMessage.textContent = "Could not load the roster. Try reloading the page.";
@@ -238,7 +374,9 @@ async function load() {
   }
   characters = chars.data.map((c) => ({ ...c, player_name: players.get(c.player_id) ?? null }));
   gains = new Map((gainRows.data ?? []).map((g) => [g.character_id, g]));
+  dungeons = dungeonRows.data ?? [];
   fillPlayerList(els.playerList, players);
+  renderBoard();
   renderLevelLine();
   renderRoster();
 }

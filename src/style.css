@@ -74,6 +74,11 @@ main {
   gap: 32px;
 }
 
+/* Grid items default to their content width; a long level line must scroll inside its panel instead. */
+main > * {
+  min-width: 0;
+}
+
 .site-header {
   padding-top: 32px;
   padding-bottom: 24px;
@@ -683,6 +688,155 @@ details summary {
   margin: 4px 0 0;
   padding: 4px 0 0;
   border-top: 1px solid var(--hover);
+  font-size: 12px;
+  line-height: 18px;
+  color: var(--muted);
+}
+
+/* What we can run: the front page's main board. */
+
+.board-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 16px;
+  margin-bottom: 16px;
+}
+
+.board-summary {
+  margin: 0;
+  color: var(--muted);
+}
+
+.board-line + .board-line {
+  margin-top: 24px;
+}
+
+.dungeon-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 16px;
+}
+
+.dungeon {
+  display: grid;
+  gap: 12px;
+  align-content: start;
+  padding: 16px;
+  background: var(--panel);
+  border: 1px solid var(--hover);
+  border-radius: var(--radius-card);
+}
+
+.dungeon.new {
+  border-top: 2px solid var(--gold-heading);
+}
+
+.dungeon-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.dungeon-name {
+  font-size: 20px;
+  line-height: 26px;
+  color: var(--gold-heading);
+}
+
+.dungeon-tags {
+  display: flex;
+  flex: none;
+  gap: 4px;
+}
+
+.range,
+.tag-new {
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 16px;
+  letter-spacing: 0.05em;
+  padding: 2px 8px;
+  border-radius: var(--radius-small);
+  white-space: nowrap;
+}
+
+.range {
+  color: var(--text);
+  border: 1px solid var(--muted);
+}
+
+.tag-new {
+  text-transform: uppercase;
+  color: var(--gold-heading);
+  border: 1px solid var(--gold-heading);
+}
+
+.dungeon-count {
+  margin: 0;
+  color: var(--muted);
+}
+
+.dungeon-count strong {
+  font: 28px/32px var(--font-heading);
+  color: var(--success);
+  margin-right: 4px;
+}
+
+.pills {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 4px;
+}
+
+.pill {
+  display: grid;
+  grid-template-columns: 1fr auto 72px;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 8px;
+  background: var(--ground);
+  border-radius: var(--radius-small);
+}
+
+.pill-name {
+  color: var(--text);
+  text-decoration: none;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pill-name:hover {
+  color: var(--gold-name);
+  text-decoration: underline;
+}
+
+.pill-level {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.pill-status {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  text-align: right;
+}
+
+.pill-ready .pill-status { color: var(--success); }
+.pill-close .pill-status { color: var(--gold-heading); }
+.pill-done .pill-status,
+.pill-past .pill-status,
+.pill-done .pill-name,
+.pill-past .pill-name { color: var(--muted); }
+
+.dungeon-note {
+  margin: 0;
   font-size: 12px;
   line-height: 18px;
   color: var(--muted);
