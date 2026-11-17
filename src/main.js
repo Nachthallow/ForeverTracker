@@ -367,7 +367,11 @@ function playerHead(unit) {
 function playerCell(unit, s, d) {
   const c = s.character;
   const sum = questSummary(questsFor(c, d));
-  const status = s.kind === "close" ? `${s.gap} to go` : CELL_TEXT[s.kind];
+  let status = s.kind === "close" ? `${s.gap} to go` : CELL_TEXT[s.kind];
+  if (s.kind === "worth") {
+    const left = worthwhileQuests(c, d);
+    status = `${left} ${left === 1 ? "quest" : "quests"} left`;
+  }
   const pct = (n) => (sum.total ? `${Math.round((n / sum.total) * 100)}%` : "0%");
   const isAlt = c !== unit.characters[0];
   return el(
@@ -379,9 +383,9 @@ function playerCell(unit, s, d) {
       el("span", { class: "rg-status" }, status),
       el(
         "span",
-        { class: "rg-count", title: "Quests done out of all quests for this dungeon, plus in log" },
-        sum.total ? `${sum.done}/${sum.total}` : "No quests",
-        sum.log > 0 && el("span", { class: "rg-log" }, ` +${sum.log}`),
+        { class: "rg-count", title: "Quests done out of all quests for this dungeon" },
+        sum.total ? `${sum.done}/${sum.total} done` : "No quests",
+        sum.log > 0 && el("span", { class: "rg-log" }, ` · ${sum.log} in log`),
       ),
     ),
     el(
