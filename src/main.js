@@ -349,10 +349,29 @@ function lineTitle(units) {
   return `${first.region.toUpperCase()}, ${titleCase(first.faction)}, ${first.ruleset ?? "unknown ruleset"}`;
 }
 
-// Dungeons are grouped in bands of ten levels by where their range starts.
-function bandOf(d) {
-  const low = Math.floor(d.min_level / 10) * 10;
-  return { key: low, label: `Levels ${low}–${low + 9}` };
+// Dungeons are grouped by the Spelunker achievement they count for, low to
+// high; The Stockade is in none of them and comes last.
+const ACHIEVEMENT_ORDER = ["Novice Spelunker", "Experienced Spelunker", "Master Spelunker"];
+
+function sectionOf(d) {
+  const i = ACHIEVEMENT_ORDER.indexOf(d.achievement);
+  return i === -1 ? { key: 99, label: "Not in an achievement", achievement: null } : { key: i, label: d.achievement, achievement: d.achievement };
+}
+
+// A player's progress on one achievement: the most entries any of their
+// characters in this group has completed.
+function achievementCell(unit, achievement) {
+  if (!achievement) return el("span", {});
+  const criteria = new Set(dungeons.filter((d) => d.achievement === achievement).map((d) => d.criteria_id));
+  const counts = unit.characters.map((c) => (c.dungeons_done ?? []).filter((id) => criteria.has(id)).length);
+  const done = Math.max(0, ...counts);
+  const complete = done === criteria.size;
+  return el(
+    "div",
+    { class: complete ? "rg-ach rg-ach-complete" : "rg-ach" },
+    el("span", { class: "rg-ach-count" }, complete ? "Complete" : `${done}/${criteria.size} dungeons`),
+    el("span", { class: "rg-bar", "aria-hidden": "true" }, el("span", { class: "rg-bar-done", style: `width: ${Math.round((done / criteria.size) * 100)}%` })),
+  );
 }
 
 function avatarSquare(c) {
@@ -469,7 +488,7 @@ function runGrid(units, cards) {
   // Player columns run low to high, the order linesOf gives, like the level line.
   const bands = new Map();
   for (const card of cards) {
-    const band = bandOf(card.d);
+    const band = sectionOf(card.d);
     if (!bands.has(band.key)) bands.set(band.key, { ...band, cards: [] });
     bands.get(band.key).cards.push(card);
   }
@@ -489,9 +508,14 @@ function runGrid(units, cards) {
       [...bands.values()]
         .sort((a, b) => a.key - b.key)
         .map((band) => [
-          el("div", { class: "rg-band" }, el("span", {}, band.label)),
+          el(
+            "div",
+            { class: "rg-band" },
+            el("span", { class: "rg-band-label" }, band.label),
+            units.map((unit) => achievementCell(unit, band.achievement)),
+          ),
           band.cards
-            .sort((a, b) => b.canGo - a.canGo || a.d.min_level - b.d.min_level)
+            .sort((a, b) => a.d.min_level - b.d.min_level || a.d.max_level - b.d.max_level || a.d.name.localeCompare(b.d.name))
             .map(({ d, rows }) => dungeonRow(d, rows)),
         ]),
     ),
@@ -610,7 +634,7 @@ async function load() {
     db.from("level_gains").select("character_id, gained, history_since"),
     loadPlayers(),
     db.from("dungeons")
-      .select("id, name, zone, min_level, max_level, faction_note, is_new, criteria_id, area_id")
+      .select("id, name, zone, min_level, max_level, faction_note, is_new, criteria_id, area_id, achievement")
       .order("min_level")
       .order("max_level"),
     fetchAll("dungeon_quests", "quest_id, area_id, title, level, min_level, faction, shareable, giver"),

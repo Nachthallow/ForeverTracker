@@ -774,11 +774,6 @@ details summary {
   background: var(--ground);
 }
 
-.rg-band > span {
-  position: sticky;
-  left: 20px;
-}
-
 .rg-head {
   align-items: end;
   padding-block: 14px;
@@ -842,16 +837,48 @@ details summary {
   color: var(--muted);
 }
 
+/* A section per achievement: its name, then each player's progress on it. */
 .rg-band {
-  padding: 10px 20px 6px;
-  font-size: 11px;
-  font-weight: 700;
-  line-height: 16px;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--muted);
+  display: grid;
+  grid-template-columns: var(--rg-first) var(--rg-range) repeat(var(--rg-players), minmax(160px, 1fr));
+  align-items: center;
+  gap: 0 16px;
+  padding: 10px 20px 8px;
   background: var(--ground);
   border-top: 1px solid var(--hover);
+}
+
+.rg-band-label {
+  grid-column: span 2;
+  position: sticky;
+  left: 0;
+  z-index: 1;
+  margin-left: -20px;
+  padding-left: 20px;
+  align-self: stretch;
+  display: flex;
+  align-items: center;
+  background: var(--ground);
+  font: 16px/20px var(--font-heading);
+  color: var(--gold-heading);
+}
+
+.rg-ach {
+  display: grid;
+  gap: 4px;
+}
+
+.rg-ach-count {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.rg-ach-complete .rg-ach-count {
+  color: var(--success);
 }
 
 .rg-row {
