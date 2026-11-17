@@ -1,0 +1,11 @@
+{
+ "note": "Breadcrumb quests whose follow-up the game data does not name (no nextQuestId). Once the follow-up is done or in the log, the breadcrumb can no longer be picked up. Applied by import-quests.mjs.",
+ "quests": {
+  "95737": {
+   "title": "Seeking Caitlin",
+   "leadsTo": 95647,
+   "leadsToTitle": "Lost in the Thicket Things",
+   "source": "Scott, in game (2026-11-17); the quest's only objective is to speak with Caitlin Grassman, who gives Lost in the Thicket Things"
+  }
+ }
+}
