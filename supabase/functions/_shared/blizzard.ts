@@ -74,7 +74,7 @@ export type CharacterRow = {
   avatar_url: string | null;
   equipment: unknown;
   professions: unknown;
-  encounters: unknown;
+  dungeons_done: number[] | null; // null when achievements did not load: keep what is stored
   last_login_at: string | null;
 };
 
@@ -82,24 +82,44 @@ export type QuestRow = { quest_id: number; name: string | null; state: "in_progr
 
 type NamedRef = { id: number; name?: string };
 
+// Forever lists every dungeon as one criterion of these three achievements
+// (Novice, Experienced and Master Spelunker). A completed criterion means the
+// character has completed that dungeon. dungeons.criteria_id holds the IDs.
+const SPELUNKER_ACHIEVEMENTS = new Set([62031, 62032, 62033]);
+
+type AchievementEntry = {
+  id: number;
+  criteria?: { child_criteria?: { id: number; is_completed?: boolean }[] };
+};
+
+function completedDungeonCriteria(achievements: { achievements?: AchievementEntry[] } | null): number[] | null {
+  if (!achievements) return null;
+  const done: number[] = [];
+  for (const a of achievements?.achievements ?? []) {
+    if (!SPELUNKER_ACHIEVEMENTS.has(a.id)) continue;
+    for (const c of a.criteria?.child_criteria ?? []) if (c.is_completed) done.push(c.id);
+  }
+  return done;
+}
+
 // Fetches everything one character needs. Throws NotFoundError if Blizzard
 // does not know the character in this region.
 export async function fetchCharacter(region: Region, slug: string) {
   const token = await getToken();
 
   // The base profile first: a 404 here means wrong name or wrong region,
-  // and there is no point making the other five calls.
+  // and there is no point making the other six calls.
   const base = await get(region, slug, "", token);
 
-  const [equipment, professions, quests, completed, media, encounters] = await Promise.all([
+  const [equipment, professions, quests, completed, media, achievements] = await Promise.all([
     get(region, slug, "equipment", token),
     get(region, slug, "professions", token),
     get(region, slug, "quests", token),
     get(region, slug, "quests/completed", token),
     // A missing render should not fail the whole sync.
     get(region, slug, "character-media", token).catch(() => null),
-    // Dungeon completions, if Forever reports them. Optional for now.
-    get(region, slug, "encounters/dungeons", token).catch(() => null),
+    // Dungeon completions come from achievements; a failure here should not fail the sync.
+    get(region, slug, "achievements", token).catch(() => null),
   ]);
 
   const character: CharacterRow = {
@@ -121,7 +141,7 @@ export async function fetchCharacter(region: Region, slug: string) {
     avatar_url: media?.assets?.find((a: { key: string }) => a.key === "avatar")?.value ?? null,
     equipment,
     professions,
-    encounters,
+    dungeons_done: completedDungeonCriteria(achievements),
     last_login_at: base.last_login_timestamp ? new Date(base.last_login_timestamp).toISOString() : null,
   };
 
