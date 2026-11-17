@@ -1,41 +1,56 @@
-# Forever Roster: handoff for Claude Code
+# Forever Roster: plan and handoff for Claude Code
 
-Written 2026-11-17 from a planning chat. Phase 0 is done. Start at Phase 1.
-Read this whole file before doing anything, then tell Scott what you found
-in the folder and wait for his go-ahead.
+Revised 2026-11-17 (second version). The goals changed after the first
+roster went live. This file replaces the earlier phase plan: where the code
+or database still follows the old plan, this file wins. Read it all, compare
+it with what is in the repo and the database, tell Scott what has to change,
+and wait for his go-ahead.
 
 ## What this is
 
-"Forever Roster" is a small website that tracks Scott's and his friends'
-World of Warcraft: Forever characters: level, class, gear, what each
-character still wants (quests, gear, recipes, resources), which dungeons fit
-their level, and which dungeon quests they have, have done, or still need.
+"Forever Roster" is a group planner for Scott and his friends in World of
+Warcraft: Forever. It is not a character tracker with extras. Characters are
+the input; the point is to help the group play together. It has four goals:
+
+1. See which dungeons the group can run together.
+2. Get everyone's dungeon quests ready before a run, above all the quests
+   that cannot be shared and must be picked up by each person beforehand.
+3. See whether items are useful to each other: who can craft what for whom,
+   and which dungeon drops beat what a friend is wearing.
+4. Keep track of each other's levels so nobody out-levels the group.
+
+Nothing is updated by hand. Everything shown comes from Blizzard's API or
+from the open game data described below. The only things a person ever types
+are a character's name to add it, and the group passphrase.
 
 ## How we work
 
 - Work in phases. Stop after each phase, show Scott what exists, and wait.
 - At any real choice point, stop and ask instead of picking.
 - Commit before every set of edits so anything can be rolled back.
-- Never put secrets in the repo. The Blizzard client secret and the Supabase
-  service key live only in Supabase Edge Function secrets. Never ask Scott to
-  paste them into chat.
+- Never put secrets in the repo. The Blizzard client secret, the Supabase
+  secret key and the group passphrase live only in Supabase Edge Function
+  secrets. Never ask Scott to paste them into chat.
 - Scott prefers prose over bullets in replies, direct answers, and honest
   tradeoffs over reassurance.
 - Verify game facts against a source. Do not write level ranges, quest lists
   or other game data from memory.
+- Scott knows GitLab and is learning GitHub on this project. Explain
+  GitHub-specific steps briefly when they come up.
 
 ## Current state
 
-- Local folder: `C:\Users\Strife\Projects\WoWForever`. It holds `.gitignore`,
-  this file, and `supabase/functions/probe/index.ts`. Check whether `git init`
-  has been run and whether anything is committed; that was left to Scott.
-- Remote: GitHub, `https://github.com/Nachthallow/ForeverTracker.git`. Scott
-  has used GitLab before and is using GitHub here to learn it, so explain
-  GitHub-specific steps (Pages, Actions) briefly when they come up.
-- Supabase: a project exists on the Free plan. `BLIZZARD_CLIENT_ID` and
-  `BLIZZARD_CLIENT_SECRET` are set as Edge Function secrets, and the `probe`
-  function is deployed and working. The Supabase CLI may not be installed or
-  linked yet; the probe was deployed through the dashboard.
+- Local folder: `C:\Users\Strife\Projects\WoWForever`, a git repo.
+- Remote: `https://github.com/Nachthallow/ForeverTracker.git`, now public.
+- Live site: `https://nachthallow.github.io/ForeverTracker/`, deployed by a
+  GitHub Actions workflow on every push to `main`.
+- Built so far (the old Phase 1): Vite site, `sync` Edge Function, roster
+  grid with one card per character, "Add character" form, faction, region
+  and sort filters, Refresh per card. Nachtwald Ravensong is on it.
+- Gap Scott hit: the site stores gear, professions and quests but shows none
+  of them. Confirm what is really stored before building on it.
+- Supabase: Free plan. `BLIZZARD_CLIENT_ID` and `BLIZZARD_CLIENT_SECRET` are
+  set as Edge Function secrets.
   - Project ref: `mwvppjxhtylnrfjdcrmt`
   - Project URL: `https://mwvppjxhtylnrfjdcrmt.supabase.co`
     (REST at `/rest/v1/`, functions at `/functions/v1/`)
@@ -44,26 +59,48 @@ their level, and which dungeon quests they have, have done, or still need.
   - This project uses the newer key format. Use the publishable key wherever
     older guides say "anon key". Never ask for or store the secret key
     (`sb_secret_...`) or the legacy `service_role` key.
-- Blizzard: a developer client exists at develop.battle.net.
-- The `probe` function is throwaway. Keep it until `sync` works, then delete
-  it from the repo and from Supabase.
+- The `probe` function was throwaway. If `sync` works, delete `probe` from
+  the repo and from Supabase.
 
-## Decisions made
+## Decisions
 
-- Frontend: static site, plain HTML/CSS/JS with Vite, hosted on GitHub Pages.
-- Backend: Supabase (Postgres, Row Level Security, Edge Functions, pg_cron).
-- Refresh: every character re-synced every 6 hours, plus a manual "Refresh"
-  per character with a 10-minute cooldown.
-- Region: stored per character, default `us`. Scott and all his friends are
-  on NA. (The original prompt said Scott was on EU; that was wrong.) The UI
-  still gets a region selector on "Add character" and as a roster filter.
-- Claims: honor system with a PIN. No Battle.net login.
-- Quest log: store and show each character's in-progress quests from the API,
-  read-only, alongside the manual needs board.
-- Avatars: use Blizzard's character-media avatar on the cards.
-- Ruleset: store it and show it as a text badge.
-- Dungeon quests: built from the Efficient Games open data (see below), not
-  typed in by hand and not copied from any addon.
+Still standing:
+
+- Static site, plain HTML/CSS/JS with Vite, on GitHub Pages. Supabase for
+  Postgres, RLS, Edge Functions and pg_cron.
+- Every character re-synced every 6 hours, plus a manual Refresh with a
+  10-minute cooldown.
+- Region stored per character, default `us`. Everyone is on NA today. Keep
+  the region selector.
+- Store and show the live quest log, the Blizzard avatar, and the ruleset.
+- Dungeon quest data comes from Efficient Games, never from an addon.
+
+Changed on 2026-11-17:
+
+- No ownership. No claims, no per-character PINs, no display names. Remove
+  `claimed_by`, `pin_hash`, `claimed_at` and anything built for them.
+- No manual needs board. Drop the `needs` table and the QUEST / GEAR /
+  RECIPE / HUNTING types. Wants are derived from data, not typed in.
+- No self-reported fields. Drop `zone`. No role field (tank, healer,
+  damage) for now; Scott chose to keep everything automatic.
+- Access: anyone with the link can view everything. Adding or removing a
+  character needs one group passphrase that Scott shares with his friends.
+- Level history is recorded from now on.
+- The front page is the group view, not the roster grid.
+
+## Group passphrase
+
+- One passphrase for the whole group. Scott sets it as an Edge Function
+  secret (suggest the name `GROUP_PASSPHRASE`) himself, in the dashboard.
+- Add and remove go through an Edge Function that checks the passphrase
+  server-side with a constant-time compare. The browser never decides.
+- Rate-limit wrong attempts (5 tries, then 15 minutes, per IP).
+- The site asks for it once, then remembers it in that browser
+  (localStorage, wrapped in try/catch) with a "forget" link.
+- Say plainly in the UI copy that this keeps strangers out and is not real
+  security. Reads stay open through RLS; there are still no direct writes
+  from the browser.
+- Removing a character deletes its synced data and history. Ask to confirm.
 
 ## Phase 0 result: the Blizzard API works
 
@@ -149,7 +186,7 @@ Quest IDs are Blizzard's, the same IDs the profile API returns. Spot check:
 from the test character's log, 92457 "Starving Arcane" and 1050 "Mythology of
 the Titans" are both typed 81.
 
-Open problems, to solve in the dungeon quest phase and show Scott:
+Open problems, to solve in Phase C and show Scott:
 
 1. The 458 includes junk such as test quests (quest 1 is one). Filter to
    quests that are obtainable, probably those some NPC or object offers.
@@ -167,77 +204,95 @@ what the two numbers mean (ask Scott; probably done or in log, out of total):
 Blackfathom Deeps 0/6, Excavation Site: Wetlands 8/9, Gnomeregan 1/11, City
 of Dalaran 3/4, The Stockade shown as complete.
 
-## Phase 1: schema, sync, read-only roster
+## The plan
 
-Tables:
+Each phase ends with something a friend can use. Stop after each one.
 
-- `characters`: id, region, blizzard_id, first_name, surname, slug (unique
-  per region), level, experience, class, race, faction, guild, ruleset,
-  item_level, avatar_url, equipment jsonb, professions jsonb, zone (optional,
-  self-reported), last_login_at, last_synced_at, claimed_by (display name),
-  pin_hash, claimed_at
-- `character_quests`: character_id, quest_id, name, state (in_progress |
-  completed). Replaced on each sync.
-- `dungeons`: id, name, zone, min_level, max_level, faction_note, is_new
-- `needs`: id, character_id, type (quest | gear | recipe | hunting), name,
-  quality, source, note, done, created_at
+### Phase A: character sheets and the level line
 
-RLS: anonymous users can read everything except `pin_hash`. No direct writes
-from the browser; every write goes through an Edge Function or a
-security-definer RPC.
+- Confirm equipment, professions and quests are stored for every character.
+  Fix the sync if not.
+- Clean up for the changed decisions: drop the claim columns, the `needs`
+  table and `zone` if they exist. Show Scott the migration first.
+- Add `level_snapshots` (character_id, level, experience, taken_at). Write a
+  row at each sync when level or experience changed.
+- Character page with its own link: header as on the card; gear by slot with
+  the item name in its quality colour plus the quality word; professions
+  with skill and max and a collapsible recipe list; the in-progress quest
+  log; a count of completed quests.
+- Level line on the front page: every character in level order on one row,
+  the gap between highest and lowest, last login, and, once there is
+  history, levels gained in the last 7 days. Flag anyone far enough ahead or
+  behind that shared content stops overlapping; propose the threshold to
+  Scott, do not invent it.
+- Add and remove behind the group passphrase.
 
-Edge Function `sync`: fetches one character or all, upserts, respects the
-cooldown. Schedule it with pg_cron. Reuse the token and fetch code from
-`probe`.
+### Phase B: dungeons the group can run
 
-Page: roster grid of character cards, sortable by level, filter by faction
-and region, "Add character" by name, surname and region (calls sync; rejects
-names Blizzard does not know).
+- Seed `dungeons` (name, zone, min_level, max_level, faction_note, is_new)
+  with the classic 1-60 dungeons and Forever's nine new ones. Take level
+  ranges from a source you can cite and show Scott the table before seeding.
+- Front page section "What we can run": each dungeon with who fits now, who
+  is close (say how close), and who is past it. Group by "For the group
+  now" and "Coming up". Mark new-in-Forever dungeons.
+- Respect faction and ruleset: characters that cannot group together are
+  not counted together.
 
-## Phase 2: claim and needs
+### Phase C: dungeon quest prep
 
-- Claim: pick a display name and a PIN. Store only a bcrypt hash (pgcrypto).
-  Editing a character's needs requires its PIN; keep it in sessionStorage,
-  wrapped in try/catch. Rate-limit wrong PINs (5 tries, then 15 minutes).
-- Say plainly in the UI copy that this is an honor system, not security.
-- Needs board per character: add, tick done, remove. Four types, always in
-  this order: QUEST, GEAR, RECIPE, HUNTING.
-- "Can help" button for other people: records a display name against a need.
-- Show the character's live quest log read-only next to the board.
-
-## Phase 3: dungeon suggestions
-
-Seed the `dungeons` table with the classic 1-60 dungeons and Forever's nine
-new ones, with level ranges. Take the data from a source you can cite and
-show Scott the table to verify before seeding. On each character, show
-dungeons whose range includes its level, grouped as "For your level" and
-"Coming up", with new-in-Forever dungeons marked, and a "who else fits" list
-that respects faction and ruleset.
-
-## Phase 4: dungeon quests
-
-- Import the Efficient Games data with a script that can be re-run when they
-  publish a new build. Tables: `dungeon_quests` (quest_id, dungeon_id, title,
-  level, min_level, faction, giver, giver_zone) and `quest_prereqs`
+- Import the Efficient Games data with a script that can be re-run for a new
+  build. Tables: `dungeon_quests` (quest_id, dungeon_id, title, level,
+  min_level, faction, shareable, giver, giver_zone) and `quest_prereqs`
   (quest_id, requires_quest_id).
-- Per character and dungeon, show each quest as done, in the log, available,
-  or blocked by a pre-quest, and a count on the dungeon card.
-- "Get ready" view per dungeon: what to pick up and which pre-quests to do
-  first, in chain order.
-- Across friends: who still needs quests from the same dungeon.
-- Show Scott the filtered quest list per dungeon and compare the counts with
-  his in-game journal before calling it done.
+- Find the sharing flag. Naowh's credits say the Efficient Games data
+  supplies it for dungeon quests; locate the field in `DATASETS.md` (likely
+  in the quest `flags`) and confirm with a few known quests.
+- Per dungeon, per character: each quest as done, in the log, available to
+  pick up, or blocked by a pre-quest. A count on each dungeon.
+- "Get ready" view for a dungeon and a chosen set of characters: for each
+  person, what to pick up and which pre-quests to do first, in chain order,
+  with unshareable quests listed first and shareable ones marked "one of you
+  can share this".
+- Check the filtered list against Scott's in-game journal before calling it
+  done (numbers in the data section below).
 
-## Phase 5: polish
+### Phase D: crafting for each other
 
-Mobile layout, empty states, "updated 2h ago" stamps, a README explaining
-setup, how a friend adds a character, and the data credits.
+- From known recipes: for any character, "who in the group can make this"
+  and "what can I make that someone could wear or use".
+- Needs recipe-to-item data. Check what the Blizzard game-data API
+  (`/data/wow/recipe/{id}`) and the Efficient Games `trainers` data give
+  before designing. Show Scott what is possible first.
+
+### Phase E: loot planning
+
+- For a dungeon, which drops are better than what each character has
+  equipped in that slot.
+- Check the Efficient Games `loot` and `encounters` datasets first; they are
+  untested here. "Better" needs a rule Scott agrees to (item level and
+  usable armour type is the simple version). Propose it, do not assume it.
+- Optional extra, last: a search box, "I got this item, who can use it",
+  showing who can equip it and what they wear in that slot now. Blizzard
+  does not expose bags or bank, so this can never be automatic.
+
+### Phase F: polish
+
+Mobile layout, empty states, "updated 2h ago" stamps, and a README covering
+setup, how a friend adds a character, the passphrase, and the data credits.
+
+## Questions to ask Scott first
+
+1. What do the two numbers in the Naowh journal's quest counts mean?
+2. Forever has new races and may have new classes. Should class colours
+   fall back to plain text for any class not in the theme list?
+3. For the level line: how many levels apart is "too far"?
+4. Should removing a character be undoable for a short time, or final?
 
 ## Theme: "Forever Roster"
 
 Unofficial fan theme. No Blizzard logos, crests, icons or fonts; everything
 is drawn in CSS. The one exception Scott approved is the character avatar
-from the API. Faction and ruleset are text badges.
+from the API. Faction, ruleset and region are text badges.
 
 - Ground: page #170e09, panels #2f231e, hover #3d2e26. No pure black or grey.
 - Leather (character cards only): gradient #6b4a33 to #8a6548, 2px #c9b58f
@@ -256,12 +311,3 @@ from the API. Faction and ruleset are text badges.
 - Buttons: outlined gold by default, one solid gold per view, white 2px
   focus ring.
 - Voice: short and plain, like a note on a guild board. No emoji.
-
-## Questions to ask Scott before Phase 1 code
-
-1. Has the local folder been committed and pushed to GitHub yet?
-2. Is the Supabase CLI installed and linked to the project?
-3. What do the two numbers in the Naowh journal's quest counts mean?
-4. Races and classes: Forever has new races (the test character is one).
-   Should class colours fall back to plain text for any class not in the
-   theme list?
