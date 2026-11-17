@@ -231,7 +231,6 @@ function standing(unit, d) {
   return { kind: "far", character: unit.characters[0] };
 }
 
-const STANDING_TEXT = { go: "Can go", worth: "Quests left", done: "Done" };
 const GOING = new Set(["go", "worth"]);
 
 // Open quests in this dungeon that are not grey for the character yet.
@@ -342,7 +341,6 @@ function questList(list, c) {
 
 // The run grid: one table per group, a row per dungeon, a column per player.
 
-const CELL_TEXT = { ...STANDING_TEXT, far: "Too low" };
 
 function lineTitle(units) {
   const first = units[0].characters[0];
@@ -404,24 +402,42 @@ function playerHead(unit) {
 }
 
 // One player's cell in a dungeon row: status, quests done/total and a bar.
-function playerCell(unit, s, d) {
-  const c = s.character;
-  const sum = questSummary(questsFor(c, d));
-  let status = s.kind === "close" ? `${s.gap} to go` : CELL_TEXT[s.kind];
-  if (s.kind === "done" && sum.total > 0 && sum.done === sum.total) status = "Quests complete";
+// What the cell says, as a prep checklist:
+//   not cleared: "Pick up 3" (quests to grab), "Pre-quest first", or "Ready"
+//   cleared:     "1 quest left", "Complete" (every quest done), or "Cleared"
+//   too low:     "2 to go" or "Too low"
+function cellStatus(s, c, d, list, sum) {
+  if (s.kind === "go") {
+    const pickup = list.filter((x) => x.kind === "pickup").length;
+    if (pickup) return { text: `Pick up ${pickup}`, tone: "todo" };
+    if (list.some((x) => x.kind === "blocked")) return { text: "Pre-quest first", tone: "blocked" };
+    return { text: "Ready", tone: "ready" };
+  }
   if (s.kind === "worth") {
     const left = worthwhileQuests(c, d);
-    status = `${left} ${left === 1 ? "quest" : "quests"} left`;
+    return { text: `${left} ${left === 1 ? "quest" : "quests"} left`, tone: "todo" };
   }
+  if (s.kind === "done") {
+    return sum.total > 0 && sum.done === sum.total ? { text: "Complete", tone: "quiet" } : { text: "Cleared", tone: "quiet" };
+  }
+  if (s.kind === "close") return { text: `${s.gap} to go`, tone: "quiet" };
+  return { text: "Too low", tone: "quiet" };
+}
+
+function playerCell(unit, s, d) {
+  const c = s.character;
+  const list = questsFor(c, d);
+  const sum = questSummary(list);
+  const status = cellStatus(s, c, d, list, sum);
   const pct = (n) => (sum.total ? `${Math.round((n / sum.total) * 100)}%` : "0%");
   const isAlt = c !== unit.characters[0];
   return el(
     "div",
-    { class: `rg-cell rg-${s.kind}` },
+    { class: `rg-cell rg-${s.kind} tone-${status.tone}` },
     el(
       "div",
       { class: "rg-cell-top" },
-      el("span", { class: "rg-status" }, status),
+      el("span", { class: "rg-status" }, status.text),
       el(
         "span",
         { class: "rg-count", title: "Quests done out of all quests for this dungeon" },

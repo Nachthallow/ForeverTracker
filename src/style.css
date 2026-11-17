@@ -971,11 +971,10 @@ details summary {
   white-space: nowrap;
 }
 
-.rg-go .rg-status,
-.rg-worth .rg-status { color: var(--success); }
-.rg-close .rg-status { color: var(--gold-heading); }
-.rg-done .rg-status,
-.rg-far .rg-status { color: var(--muted); }
+.tone-ready .rg-status { color: var(--success); }
+.tone-todo .rg-status { color: var(--gold-heading); }
+.tone-blocked .rg-status { color: var(--horde); }
+.tone-quiet .rg-status { color: var(--muted); }
 
 .rg-count {
   font-size: 12px;
