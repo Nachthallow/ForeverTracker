@@ -146,8 +146,7 @@ if (prereqs.size) {
 if (forward.size) {
   lines.push(
     "insert into public.quest_next (quest_id, next_quest_id) values",
-    [...forward].map(([q, n]) => `(${q}, ${n})`).join(",
-") + ";",
+    [...forward].map(([q, n]) => `(${q}, ${n})`).join(",\n") + ";",
   );
 }
 lines.push("commit;", "");
