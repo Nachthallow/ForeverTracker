@@ -213,9 +213,10 @@ function standing(unit, d) {
   const inRange = unit.characters.filter((c) => (c.level ?? 0) >= d.min_level && (c.level ?? 0) <= d.max_level);
   const notDone = inRange.filter((c) => !dungeonDone(c, d));
   if (notDone.length) return { kind: "go", character: notDone[0] };
-  // Above the range but with quests there that are not grey yet: still worth going.
-  const over = unit.characters.filter((c) => (c.level ?? 0) > d.max_level && !dungeonDone(c, d) && worthwhileQuests(c, d) > 0);
-  if (over.length) return { kind: "worth", character: over[0] };
+  // Done the dungeon, or above its range, but with quests there that are not
+  // grey yet: still worth going.
+  const worth = unit.characters.filter((c) => (c.level ?? 0) >= d.min_level && worthwhileQuests(c, d) > 0);
+  if (worth.length) return { kind: "worth", character: worth[0] };
   if (inRange.length) return { kind: "done", character: inRange[0] };
   const below = unit.characters
     .filter((c) => (c.level ?? 0) < d.min_level)
