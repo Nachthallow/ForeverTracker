@@ -948,7 +948,6 @@ details summary {
 .rg-worth .rg-status { color: var(--success); }
 .rg-close .rg-status { color: var(--gold-heading); }
 .rg-done .rg-status,
-.rg-past .rg-status,
 .rg-far .rg-status { color: var(--muted); }
 
 .rg-count {
@@ -974,7 +973,6 @@ details summary {
 .rg-bar-log { background: var(--gold-heading); }
 
 .rg-done .rg-bar,
-.rg-past .rg-bar,
 .rg-far .rg-bar {
   opacity: 0.45;
 }

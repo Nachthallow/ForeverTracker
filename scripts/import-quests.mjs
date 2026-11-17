@@ -100,11 +100,17 @@ function walk(questId, depth) {
 }
 for (const [id] of dungeonQuests) walk(Number(id), 0);
 
-// Forward links: from each dungeon quest along what comes next, so a page can
-// tell when a later step is done.
+// Forward links from breadcrumbs: quests whose only job is to send you to
+// someone (no objectives of their own, "Speak with ...", "Find ..."), plus the
+// sourced list. Once what they lead to is done or in the log, they are gone.
+// Real quests are left alone: a stray nextQuestId (Highland Hides points at a
+// level 22 tanner quest) must not hide them.
+const TALK_ONLY = /^(speak|talk|report|find|seek|travel)\s/i;
+const isBreadcrumb = (id) =>
+  Boolean(BREADCRUMBS[id]) || (!(quests[id]?.objectives ?? []).length && TALK_ONLY.test(quests[id]?.objectivesText ?? ""));
 const nextOf = (id) => BREADCRUMBS[id]?.leadsTo ?? quests[id]?.nextQuestId ?? null;
 const forward = new Map();
-for (const [id] of dungeonQuests) {
+for (const [id] of dungeonQuests.filter(([id]) => isBreadcrumb(id))) {
   let at = Number(id);
   for (let depth = 0; depth < MAX_CHAIN_DEPTH; depth++) {
     const next = nextOf(at);

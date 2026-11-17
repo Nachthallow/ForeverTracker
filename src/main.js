@@ -49,6 +49,7 @@ let gains = new Map();
 let dungeons = [];
 let questsByArea = new Map(); // area_id -> dungeon quests
 let prereqsOf = new Map(); // quest_id -> quests that come before it
+let nextOf = new Map(); // quest_id -> the quest that comes after it
 let questLogs = new Map(); // character_id -> Map(quest_id -> state)
 
 // Reads a whole table past the API's 1000-row page limit.
@@ -210,25 +211,27 @@ function dungeonDone(c, d) {
 }
 
 function standing(unit, d) {
-  const inRange = unit.characters.filter((c) => (c.level ?? 0) >= d.min_level && (c.level ?? 0) <= d.max_level);
-  const notDone = inRange.filter((c) => !dungeonDone(c, d));
+  // Any character at or above the minimum level can go. Being over-levelled
+  // does not matter: an undone dungeon still counts for the achievement.
+  const able = unit.characters
+    .filter((c) => (c.level ?? 0) >= d.min_level)
+    .sort((a, b) => Number((a.level ?? 0) > d.max_level) - Number((b.level ?? 0) > d.max_level));
+  const notDone = able.filter((c) => !dungeonDone(c, d));
   if (notDone.length) return { kind: "go", character: notDone[0] };
-  // Done the dungeon, or above its range, but with quests there that are not
-  // grey yet: still worth going.
-  const worth = unit.characters.filter((c) => (c.level ?? 0) >= d.min_level && worthwhileQuests(c, d) > 0);
+  // Done the dungeon, but with quests there that are not grey yet.
+  const worth = able.filter((c) => worthwhileQuests(c, d) > 0);
   if (worth.length) return { kind: "worth", character: worth[0] };
-  if (inRange.length) return { kind: "done", character: inRange[0] };
+  if (able.length) return { kind: "done", character: able[0] };
   const below = unit.characters
     .filter((c) => (c.level ?? 0) < d.min_level)
     .sort((a, b) => (b.level ?? 0) - (a.level ?? 0))[0];
   if (below && d.min_level - (below.level ?? 0) <= CLOSE_LEVELS) {
     return { kind: "close", character: below, gap: d.min_level - (below.level ?? 0) };
   }
-  const past = unit.characters.every((c) => (c.level ?? 0) > d.max_level);
-  return { kind: past ? "past" : "far", character: unit.characters[0] };
+  return { kind: "far", character: unit.characters[0] };
 }
 
-const STANDING_TEXT = { go: "Can go", worth: "Quests left", done: "Done", past: "Past it" };
+const STANDING_TEXT = { go: "Can go", worth: "Quests left", done: "Done" };
 const GOING = new Set(["go", "worth"]);
 
 // Open quests in this dungeon that are not grey for the character yet.
@@ -258,8 +261,20 @@ function firstMissingStep(c, questId, depth = 0) {
     { id: step.requires_quest_id, title: step.requires_title, inLog: questState(c, step.requires_quest_id) === "in_progress" };
 }
 
+// True when a quest that comes after this one is done or in the log: then
+// this one can no longer be picked up (a breadcrumb, or a skipped step).
+function laterStepTaken(c, questId) {
+  let at = nextOf.get(questId);
+  for (let depth = 0; at && depth < 10; depth++) {
+    if (questState(c, at)) return true;
+    at = nextOf.get(at);
+  }
+  return false;
+}
+
 // The dungeon's quests for this character's faction. Quests that share a
-// title (one per item reward, one per faction) count as one.
+// title (one per item reward, one per faction) count as one. Quests the
+// character can no longer pick up are left out.
 function questsFor(c, d) {
   const groups = new Map();
   for (const q of questsByArea.get(d.area_id) ?? []) {
@@ -268,16 +283,22 @@ function questsFor(c, d) {
     groups.get(q.title).push(q);
   }
   const RANK = { done: 0, log: 1, pickup: 2, blocked: 3 };
-  return [...groups.values()].map((variants) => {
-    const options = variants.map((q) => {
+  const list = [];
+  for (const variants of groups.values()) {
+    const options = [];
+    for (const q of variants) {
       const state = questState(c, q.quest_id);
-      if (state === "completed") return { q, kind: "done" };
-      if (state === "in_progress") return { q, kind: "log" };
-      const missing = firstMissingStep(c, q.quest_id);
-      return missing ? { q, kind: "blocked", missing } : { q, kind: "pickup" };
-    });
-    return options.sort((a, b) => RANK[a.kind] - RANK[b.kind])[0];
-  });
+      if (state === "completed") options.push({ q, kind: "done" });
+      else if (state === "in_progress") options.push({ q, kind: "log" });
+      else if (laterStepTaken(c, q.quest_id)) continue;
+      else {
+        const missing = firstMissingStep(c, q.quest_id);
+        options.push(missing ? { q, kind: "blocked", missing } : { q, kind: "pickup" });
+      }
+    }
+    if (options.length) list.push(options.sort((a, b) => RANK[a.kind] - RANK[b.kind])[0]);
+  }
+  return list;
 }
 
 function questSummary(list) {
@@ -368,6 +389,7 @@ function playerCell(unit, s, d) {
   const c = s.character;
   const sum = questSummary(questsFor(c, d));
   let status = s.kind === "close" ? `${s.gap} to go` : CELL_TEXT[s.kind];
+  if (s.kind === "done" && sum.total > 0 && sum.done === sum.total) status = "Quests complete";
   if (s.kind === "worth") {
     const left = worthwhileQuests(c, d);
     status = `${left} ${left === 1 ? "quest" : "quests"} left`;
@@ -583,7 +605,7 @@ function renderRoster() {
 
 async function load() {
   if (characters.length === 0) els.rosterMessage.textContent = "Loading the roster...";
-  const [chars, gainRows, players, dungeonRows, questRows, prereqRows, logRows] = await Promise.all([
+  const [chars, gainRows, players, dungeonRows, questRows, prereqRows, nextRows, logRows] = await Promise.all([
     db.from("characters").select(`${SUMMARY_COLUMNS}, dungeons_done`),
     db.from("level_gains").select("character_id, gained, history_since"),
     loadPlayers(),
@@ -593,6 +615,7 @@ async function load() {
       .order("max_level"),
     fetchAll("dungeon_quests", "quest_id, area_id, title, level, min_level, faction, shareable, giver"),
     fetchAll("quest_prereqs", "quest_id, requires_quest_id, requires_title"),
+    fetchAll("quest_next", "quest_id, next_quest_id"),
     fetchAll("character_dungeon_quests", "character_id, quest_id, state"),
   ]);
   if (chars.error) {
@@ -614,6 +637,7 @@ async function load() {
     if (!prereqsOf.has(p.quest_id)) prereqsOf.set(p.quest_id, []);
     prereqsOf.get(p.quest_id).push(p);
   }
+  nextOf = new Map(nextRows.map((n) => [n.quest_id, n.next_quest_id]));
   questLogs = new Map();
   for (const row of logRows) {
     if (!questLogs.has(row.character_id)) questLogs.set(row.character_id, new Map());
