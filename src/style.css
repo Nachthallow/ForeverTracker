@@ -34,6 +34,11 @@
   box-sizing: border-box;
 }
 
+/* Layout rules like display: flex must not override the hidden attribute. */
+[hidden] {
+  display: none !important;
+}
+
 body {
   margin: 0;
   background: var(--ground);
@@ -383,4 +388,233 @@ select:hover {
 
 .card-status:empty {
   display: none;
+}
+
+/* Shared bits */
+
+a {
+  color: var(--gold-action);
+}
+
+a:hover {
+  color: var(--gold-name);
+}
+
+.muted {
+  color: var(--muted);
+}
+
+.small {
+  font-size: 12px;
+  line-height: 18px;
+}
+
+.link-button {
+  font: inherit;
+  color: var(--gold-action);
+  background: none;
+  border: 0;
+  padding: 0;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.crumb {
+  margin: 0;
+}
+
+.char-name a {
+  color: var(--gold-name);
+  text-decoration: none;
+}
+
+.char-name a:hover {
+  text-decoration: underline;
+}
+
+h3.sub,
+h3.group-title {
+  font-size: 18px;
+  line-height: 24px;
+  color: var(--gold-heading);
+  margin: 16px 0 8px;
+}
+
+/* Level line */
+
+.level-group + .level-group {
+  margin-top: 24px;
+}
+
+.level-summary {
+  margin: 4px 0 12px;
+}
+
+.level-line {
+  list-style: none;
+  margin: 0 0 12px;
+  padding: 0 0 4px;
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+}
+
+.level-chip {
+  flex: 0 0 auto;
+  min-width: 150px;
+  display: grid;
+  gap: 2px;
+  align-content: start;
+  padding: 8px 12px;
+  background: var(--ground);
+  border: 1px solid var(--hover);
+  border-radius: var(--radius-card);
+}
+
+.level-chip.flagged {
+  border-color: var(--horde);
+}
+
+.chip-level {
+  font: 28px/32px var(--font-heading);
+  color: var(--gold-heading);
+}
+
+.chip-name {
+  font-family: var(--font-heading);
+  font-size: 16px;
+  color: var(--gold-name);
+  text-decoration: none;
+}
+
+.chip-name:hover {
+  text-decoration: underline;
+}
+
+.chip-meta {
+  font-size: 12px;
+  line-height: 18px;
+  color: var(--muted);
+}
+
+.badge-flag {
+  justify-self: start;
+  margin-top: 4px;
+  color: var(--horde);
+  border-color: var(--horde);
+  background: transparent;
+}
+
+/* Character page */
+
+.sheet-head {
+  max-width: 420px;
+}
+
+.sheet-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 16px;
+  align-items: start;
+}
+
+.panel h2 + * {
+  margin-top: 0;
+}
+
+.gear {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.gear th {
+  text-align: left;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--muted);
+  padding: 4px 8px 4px 0;
+}
+
+.gear td {
+  padding: 4px 8px 4px 0;
+  border-top: 1px solid var(--hover);
+  vertical-align: top;
+}
+
+.gear .num {
+  text-align: right;
+  padding-right: 0;
+  white-space: nowrap;
+}
+
+.gear .slot {
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.item {
+  font-weight: 600;
+}
+
+.tag {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  white-space: nowrap;
+}
+
+.q-poor { color: #9d9d9d; }
+.q-common { color: #ffffff; }
+.q-uncommon { color: #1eff00; }
+.q-rare { color: #4a9eff; }
+.q-epic { color: #b85cff; }
+.q-legendary { color: #ff8000; }
+
+.profession + .profession {
+  margin-top: 12px;
+}
+
+.prof-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.prof-name {
+  font-weight: 600;
+}
+
+.bar {
+  height: 6px;
+  margin: 4px 0;
+  background: var(--ground);
+  border-radius: var(--radius-small);
+  overflow: hidden;
+}
+
+.bar span {
+  display: block;
+  height: 100%;
+  background: var(--gold-heading);
+}
+
+details summary {
+  cursor: pointer;
+  color: var(--gold-action);
+}
+
+.recipe-list,
+.quest-list {
+  margin: 8px 0 0;
+  padding-left: 20px;
+  columns: 2 220px;
+  column-gap: 24px;
+}
+
+.recipe-list li,
+.quest-list li {
+  break-inside: avoid;
 }

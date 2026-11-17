@@ -1,151 +1,129 @@
-import { createClient } from "@supabase/supabase-js";
-import { SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY } from "./config.js";
+// Front page: the group view. Level line first, then the roster cards.
+import {
+  db,
+  el,
+  classSpan,
+  timeAgo,
+  titleCase,
+  fullName,
+  characterUrl,
+  callSync,
+  passphrase,
+  characterCard,
+  SUMMARY_COLUMNS,
+} from "./lib.js";
 
-const db = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
-  auth: { persistSession: false },
-});
-
-const ROSTER_COLUMNS =
-  "id, region, first_name, surname, level, class, race, faction, guild, ruleset, " +
-  "item_level, avatar_url, last_synced_at, sync_error, claimed_by";
-
-// Classes in the theme. Anything else (Forever may add more) shows in plain text.
-const CLASS_KEYS = new Set(["warrior", "paladin", "hunter", "rogue", "priest", "shaman", "mage", "warlock", "druid"]);
+// Scott's rule: flag anyone this many levels or more from the middle of the group.
+const LEVEL_GAP_FLAG = 5;
 
 const els = {
+  levelLine: document.getElementById("level-line"),
   roster: document.getElementById("roster"),
   rosterMessage: document.getElementById("roster-message"),
   addForm: document.getElementById("add-form"),
   addMessage: document.getElementById("add-message"),
+  passField: document.getElementById("pass-field"),
+  passRemembered: document.getElementById("pass-remembered"),
+  forget: document.getElementById("forget-pass"),
   faction: document.getElementById("filter-faction"),
   region: document.getElementById("filter-region"),
   sort: document.getElementById("sort"),
 };
 
 let characters = [];
+let gains = new Map();
 
-// Small DOM helper. Text always goes in through textContent, never innerHTML.
-function el(tag, attrs = {}, ...children) {
-  const node = document.createElement(tag);
-  for (const [key, value] of Object.entries(attrs)) {
-    if (value == null || value === false) continue;
-    if (key === "class") node.className = value;
-    else if (key.startsWith("on")) node.addEventListener(key.slice(2), value);
-    else node.setAttribute(key, value);
+// Level line --------------------------------------------------------------------
+
+function median(sorted) {
+  const mid = Math.floor(sorted.length / 2);
+  return sorted.length % 2 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
+}
+
+function gainText(c) {
+  const g = gains.get(c.id);
+  if (!g || g.gained == null || !g.history_since) return null;
+  const since = new Date(g.history_since);
+  const weekOld = Date.now() - since.getTime() >= 7 * 24 * 3600 * 1000;
+  const label = weekOld
+    ? "in 7 days"
+    : `since ${since.toLocaleDateString("en-GB", { day: "numeric", month: "short" })}`;
+  return `${g.gained >= 0 ? "+" : ""}${g.gained} ${label}`;
+}
+
+// Characters of different factions or rulesets cannot group, so each
+// faction and ruleset pair gets its own line.
+function groupsOf(list) {
+  const groups = new Map();
+  for (const c of list) {
+    const key = `${c.faction ?? "?"}|${c.ruleset ?? "?"}`;
+    if (!groups.has(key)) groups.set(key, []);
+    groups.get(key).push(c);
   }
-  for (const child of children.flat()) {
-    if (child == null || child === false) continue;
-    node.append(child instanceof Node ? child : document.createTextNode(String(child)));
+  return [...groups.values()].map((members) => members.sort((a, b) => (a.level ?? 0) - (b.level ?? 0)));
+}
+
+function levelChip(c, middle, groupSize) {
+  const offset = (c.level ?? 0) - middle;
+  let flag = null;
+  if (groupSize > 1 && Math.abs(offset) >= LEVEL_GAP_FLAG) {
+    flag = el(
+      "span",
+      { class: "badge badge-flag" },
+      `${Math.round(Math.abs(offset))} ${offset > 0 ? "ahead" : "behind"}`,
+    );
   }
-  return node;
-}
-
-function timeAgo(iso) {
-  if (!iso) return "never";
-  const minutes = Math.round((Date.now() - Date.parse(iso)) / 60000);
-  if (minutes < 1) return "just now";
-  if (minutes < 60) return `${minutes}m ago`;
-  const hours = Math.round(minutes / 60);
-  if (hours < 48) return `${hours}h ago`;
-  return `${Math.round(hours / 24)}d ago`;
-}
-
-function titleCase(word) {
-  return word ? word.charAt(0) + word.slice(1).toLowerCase() : "";
-}
-
-async function callSync(body) {
-  const { data, error } = await db.functions.invoke("sync", { body });
-  if (!error) return data;
-  // Non-2xx responses carry our own error message in the body.
-  let message = "Something went wrong. Try again in a minute.";
-  try {
-    const payload = await error.context.json();
-    if (payload?.error) message = payload.error;
-    if (payload?.retry_after) message += ` Try again in ${Math.ceil(payload.retry_after / 60)} min.`;
-  } catch {
-    // keep the generic message
-  }
-  throw new Error(message);
-}
-
-function avatar(c) {
-  const initial = el("span", { class: "avatar avatar-fallback", "aria-hidden": "true" }, c.first_name.charAt(0));
-  if (!c.avatar_url) return initial;
-  const img = el("img", { class: "avatar", src: c.avatar_url, alt: "", loading: "lazy", width: 64, height: 64 });
-  img.addEventListener("error", () => img.replaceWith(initial));
-  return img;
-}
-
-function card(c) {
-  const classKey = (c.class ?? "").toLowerCase();
-  const classAttr = CLASS_KEYS.has(classKey) ? `class-name class-${classKey}` : "class-name";
-
-  const refresh = el("button", { class: "btn btn-small", type: "button" }, "Refresh");
-  const status = el("p", { class: "card-status", role: "status", "aria-live": "polite" });
-  refresh.addEventListener("click", async () => {
-    refresh.disabled = true;
-    status.textContent = "Refreshing...";
-    try {
-      const { character } = await callSync({ action: "refresh", id: c.id });
-      Object.assign(c, character);
-      render();
-    } catch (err) {
-      status.textContent = err.message;
-      refresh.disabled = false;
-    }
-  });
-
+  const gain = gainText(c);
   return el(
-    "article",
-    { class: "card" },
-    el(
-      "div",
-      { class: "card-top" },
-      avatar(c),
-      el(
-        "div",
-        { class: "card-id" },
-        el("h3", { class: "char-name" }, `${c.first_name} ${c.surname}`),
-        el(
-          "p",
-          { class: "char-line" },
-          `Level ${c.level ?? "?"} `,
-          el("span", { class: classAttr }, c.class ?? "Unknown class"),
-        ),
-        el("p", { class: "char-line" }, c.race ?? ""),
-      ),
-    ),
-    el(
-      "div",
-      { class: "badges" },
-      c.faction && el("span", { class: `badge badge-${c.faction.toLowerCase()}` }, titleCase(c.faction)),
-      c.ruleset && el("span", { class: "badge" }, c.ruleset),
-      el("span", { class: "badge" }, c.region.toUpperCase()),
-    ),
-    el(
-      "dl",
-      { class: "facts" },
-      c.guild && [el("dt", {}, "Guild"), el("dd", {}, c.guild)],
-      c.item_level != null && [el("dt", {}, "Item level"), el("dd", {}, c.item_level)],
-      c.claimed_by && [el("dt", {}, "Played by"), el("dd", {}, c.claimed_by)],
-    ),
-    c.sync_error && el("p", { class: "card-error" }, `Last refresh failed: ${c.sync_error}`),
-    el(
-      "div",
-      { class: "card-foot" },
-      el("span", { class: "stamp" }, `Updated ${timeAgo(c.last_synced_at)}`),
-      refresh,
-    ),
-    status,
+    "li",
+    { class: flag ? "level-chip flagged" : "level-chip" },
+    el("span", { class: "chip-level" }, c.level ?? "?"),
+    el("a", { class: "chip-name", href: characterUrl(c) }, fullName(c)),
+    classSpan(c.class),
+    el("span", { class: "chip-meta" }, `Last on ${timeAgo(c.last_login_at)}`),
+    gain && el("span", { class: "chip-meta" }, gain),
+    flag,
   );
 }
+
+function renderLevelLine() {
+  if (characters.length === 0) {
+    els.levelLine.replaceChildren(el("p", { class: "muted" }, "Add characters to see the level line."));
+    return;
+  }
+  const groups = groupsOf([...characters]);
+  const blocks = groups.map((members) => {
+    const levels = members.map((c) => c.level ?? 0);
+    const low = levels[0];
+    const high = levels[levels.length - 1];
+    const middle = median(levels);
+    const first = members[0];
+    const summary = members.length === 1
+      ? "Only one character here so far."
+      : low === high
+      ? `Everyone is level ${low}.`
+      : `Levels ${low} to ${high}, a gap of ${high - low}.`;
+    return el(
+      "div",
+      { class: "level-group" },
+      groups.length > 1 && el("h3", { class: "group-title" }, `${titleCase(first.faction)}, ${first.ruleset ?? "unknown ruleset"}`),
+      el("p", { class: "level-summary" }, summary),
+      el("ol", { class: "level-line" }, members.map((c) => levelChip(c, middle, members.length))),
+    );
+  });
+  els.levelLine.replaceChildren(
+    ...blocks,
+    el("p", { class: "muted small" }, `Flagged: ${LEVEL_GAP_FLAG} or more levels from the middle of the group.`),
+  );
+}
+
+// Roster cards --------------------------------------------------------------------
 
 function visibleCharacters() {
   const faction = els.faction.value;
   const region = els.region.value;
   const list = characters.filter((c) => (!faction || c.faction === faction) && (!region || c.region === region));
-  const byName = (a, b) => `${a.first_name} ${a.surname}`.localeCompare(`${b.first_name} ${b.surname}`);
+  const byName = (a, b) => fullName(a).localeCompare(fullName(b));
   switch (els.sort.value) {
     case "level-asc":
       return list.sort((a, b) => (a.level ?? 0) - (b.level ?? 0) || byName(a, b));
@@ -156,9 +134,19 @@ function visibleCharacters() {
   }
 }
 
-function render() {
+function renderRoster() {
   const list = visibleCharacters();
-  els.roster.replaceChildren(...list.map(card));
+  els.roster.replaceChildren(
+    ...list.map((c) =>
+      characterCard(c, {
+        link: true,
+        onUpdate: (fresh) => {
+          Object.assign(c, fresh);
+          load();
+        },
+      })
+    ),
+  );
   if (characters.length === 0) {
     els.rosterMessage.textContent = "Nobody on the roster yet. Add the first character above.";
   } else if (list.length === 0) {
@@ -169,16 +157,35 @@ function render() {
 }
 
 async function load() {
-  els.rosterMessage.textContent = "Loading the roster...";
-  const { data, error } = await db.from("characters").select(ROSTER_COLUMNS);
-  if (error) {
+  if (characters.length === 0) els.rosterMessage.textContent = "Loading the roster...";
+  const [chars, gainRows] = await Promise.all([
+    db.from("characters").select(SUMMARY_COLUMNS),
+    db.from("level_gains").select("character_id, gained, history_since"),
+  ]);
+  if (chars.error) {
     els.rosterMessage.textContent = "Could not load the roster. Try reloading the page.";
-    console.error(error);
+    console.error(chars.error);
     return;
   }
-  characters = data;
-  render();
+  characters = chars.data;
+  gains = new Map((gainRows.data ?? []).map((g) => [g.character_id, g]));
+  renderLevelLine();
+  renderRoster();
 }
+
+// Add character, behind the group passphrase ----------------------------------------
+
+function showPassphraseState() {
+  const remembered = passphrase.get() !== "";
+  els.passField.hidden = remembered;
+  els.passRemembered.hidden = !remembered;
+}
+
+els.forget.addEventListener("click", () => {
+  passphrase.forget();
+  showPassphraseState();
+  els.addForm.elements.passphrase.focus();
+});
 
 els.addForm.addEventListener("submit", async (event) => {
   event.preventDefault();
@@ -186,24 +193,40 @@ els.addForm.addEventListener("submit", async (event) => {
   const name = String(form.get("name")).trim();
   const surname = String(form.get("surname")).trim();
   const region = String(form.get("region"));
+  const typed = String(form.get("passphrase") ?? "");
+  const pass = passphrase.get() || typed;
+
+  els.addMessage.className = "form-message error";
   if (!name || !surname) {
     els.addMessage.textContent = "Name and surname are both needed.";
     return;
   }
+  if (!pass) {
+    els.addMessage.textContent = "Enter the group passphrase.";
+    return;
+  }
 
-  const button = els.addForm.querySelector("button");
+  const button = els.addForm.querySelector("button[type=submit]");
   button.disabled = true;
   els.addMessage.className = "form-message";
   els.addMessage.textContent = "Asking Blizzard...";
   try {
-    const { character, existed } = await callSync({ action: "add", region, name, surname });
+    const { character, existed } = await callSync({ action: "add", passphrase: pass, region, name, surname });
+    passphrase.set(pass);
     els.addMessage.className = "form-message ok";
     els.addMessage.textContent = existed
-      ? `${character.first_name} ${character.surname} is already on the roster.`
-      : `Added ${character.first_name} ${character.surname}.`;
-    if (!existed) els.addForm.reset();
+      ? `${fullName(character)} is already on the roster.`
+      : `Added ${fullName(character)}.`;
+    els.addForm.elements.name.value = "";
+    els.addForm.elements.surname.value = "";
+    els.addForm.elements.passphrase.value = "";
+    showPassphraseState();
     await load();
   } catch (err) {
+    if (err.wrongPassphrase) {
+      passphrase.forget();
+      showPassphraseState();
+    }
     els.addMessage.className = "form-message error";
     els.addMessage.textContent = err.message;
   } finally {
@@ -211,6 +234,7 @@ els.addForm.addEventListener("submit", async (event) => {
   }
 });
 
-for (const control of [els.faction, els.region, els.sort]) control.addEventListener("change", render);
+for (const control of [els.faction, els.region, els.sort]) control.addEventListener("change", renderRoster);
 
+showPassphraseState();
 load();

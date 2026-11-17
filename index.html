@@ -15,38 +15,18 @@
   <body>
     <header class="site-header">
       <h1>Forever Roster</h1>
-      <p class="tagline">Who is playing what, and what they still need.</p>
+      <p class="tagline">Who is where, so nobody out-levels the group.</p>
     </header>
 
     <main>
-      <section class="panel" aria-labelledby="add-heading">
-        <h2 id="add-heading">Add character</h2>
-        <form id="add-form" class="add-form" novalidate>
-          <label>
-            <span>Name</span>
-            <input name="name" autocomplete="off" required maxlength="32" />
-          </label>
-          <label>
-            <span>Surname</span>
-            <input name="surname" autocomplete="off" required maxlength="32" />
-          </label>
-          <label>
-            <span>Region</span>
-            <select name="region">
-              <option value="us" selected>US</option>
-              <option value="eu">EU</option>
-              <option value="kr">KR</option>
-              <option value="tw">TW</option>
-            </select>
-          </label>
-          <button type="submit" class="btn btn-solid">Add character</button>
-        </form>
-        <p id="add-message" class="form-message" role="status" aria-live="polite"></p>
+      <section class="panel" aria-labelledby="level-heading">
+        <h2 id="level-heading">Level line</h2>
+        <div id="level-line"><p class="muted">Loading...</p></div>
       </section>
 
       <section aria-labelledby="roster-heading">
         <div class="roster-bar">
-          <h2 id="roster-heading">Roster</h2>
+          <h2 id="roster-heading">Characters</h2>
           <div class="filters">
             <label>
               <span>Faction</span>
@@ -78,6 +58,43 @@
         </div>
         <p id="roster-message" class="roster-message" role="status" aria-live="polite"></p>
         <div id="roster" class="roster"></div>
+      </section>
+
+      <section class="panel" aria-labelledby="add-heading">
+        <h2 id="add-heading">Add character</h2>
+        <form id="add-form" class="add-form" novalidate>
+          <label>
+            <span>Name</span>
+            <input name="name" autocomplete="off" required maxlength="32" />
+          </label>
+          <label>
+            <span>Surname</span>
+            <input name="surname" autocomplete="off" required maxlength="32" />
+          </label>
+          <label>
+            <span>Region</span>
+            <select name="region">
+              <option value="us" selected>US</option>
+              <option value="eu">EU</option>
+              <option value="kr">KR</option>
+              <option value="tw">TW</option>
+            </select>
+          </label>
+          <label id="pass-field">
+            <span>Group passphrase</span>
+            <input name="passphrase" type="password" autocomplete="current-password" />
+          </label>
+          <button type="submit" class="btn btn-solid">Add character</button>
+        </form>
+        <p id="pass-remembered" class="small" hidden>
+          Passphrase remembered in this browser.
+          <button type="button" id="forget-pass" class="link-button">Forget it</button>
+        </p>
+        <p id="add-message" class="form-message" role="status" aria-live="polite"></p>
+        <p class="muted small">
+          The passphrase only keeps strangers from adding or removing characters. It is not real
+          security: anyone with the link can see everything here.
+        </p>
       </section>
     </main>
 
