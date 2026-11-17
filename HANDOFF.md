@@ -88,6 +88,18 @@ Changed on 2026-11-17:
 - Level history is recorded from now on.
 - The front page is the group view, not the roster grid.
 
+Changed again on 2026-11-17, after friends joined:
+
+- Characters can be tagged to a player (a display name), because one person
+  with several characters should not count as several people. Anyone with
+  the group passphrase can set or change the tag. This is the one typed
+  field besides the character name and the passphrase.
+- No hand-picked main. A player is placed by their highest-level character;
+  the rest are shown as that player's other characters.
+- Group views count players, not characters. A player is flagged as too far
+  only if none of their characters is within 5 levels of the group. Untagged
+  characters count as their own player.
+
 ## Group passphrase
 
 - One passphrase for the whole group. Scott sets it as an Edge Function
