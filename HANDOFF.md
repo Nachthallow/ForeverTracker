@@ -247,8 +247,17 @@ Each phase ends with something a friend can use. Stop after each one.
 - Front page section "What we can run": each dungeon with who fits now, who
   is close (say how close), and who is past it. Group by "For the group
   now" and "Coming up". Mark new-in-Forever dungeons.
-- Respect faction and ruleset: characters that cannot group together are
-  not counted together.
+- Respect region, faction and ruleset: characters that cannot group
+  together are not counted together.
+- Core value, in Scott's words: list dungeons in range, how many quests each
+  person has ready for them, and whether they have already done the dungeon
+  for the achievement. This is what the Naowh addon is used for.
+- "Done the dungeon": the `achievements` response for Nachtwald (30 entries)
+  holds exploration, profession and class achievements plus "Novice
+  Spelunker" and "Experienced Spelunker", but no per-dungeon entries, even
+  though Naowh shows The Stockade complete. The base profile also links an
+  `encounters` endpoint (in retail, `encounters/dungeons` gives completions
+  per dungeon). Probe both before designing this.
 
 ### Phase C: dungeon quest prep
 
