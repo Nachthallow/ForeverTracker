@@ -12,6 +12,17 @@ import {
   PASSPHRASE_NOTE,
   SUMMARY_COLUMNS,
 } from "./lib.js";
+import {
+  dungeons,
+  loadDungeonData,
+  standing,
+  GOING,
+  questsFor,
+  questSummary,
+  questList,
+  cellStatus,
+  sectionOf,
+} from "./dungeons.js";
 
 const sheet = document.getElementById("sheet");
 
@@ -205,6 +216,55 @@ function playerSection(c, players, others) {
   );
 }
 
+// The dungeons this character can run and still needs, by achievement, each
+// opening its quest list. Same rules and words as the front page's grid.
+function dungeonSection(c) {
+  const unit = { player: c.player_name, characters: [c] };
+  const rows = [];
+  for (const d of dungeons) {
+    const s = standing(unit, d);
+    if (!GOING.has(s.kind)) continue;
+    const list = questsFor(c, d);
+    const sum = questSummary(list);
+    rows.push({ d, s, list, sum, section: sectionOf(d) });
+  }
+  rows.sort((a, b) => a.section.key - b.section.key || a.d.min_level - b.d.min_level);
+
+  const items = [];
+  let lastSection = null;
+  for (const r of rows) {
+    if (r.section.key !== lastSection) {
+      lastSection = r.section.key;
+      items.push(el("h3", { class: "sub" }, r.section.label));
+    }
+    const status = cellStatus(r.s, c, r.d, r.list, r.sum);
+    items.push(
+      el(
+        "details",
+        { class: "char-dungeon" },
+        el(
+          "summary",
+          {},
+          el("span", { class: "char-dungeon-name" }, r.d.name),
+          el("span", { class: "char-dungeon-range" }, `${r.d.min_level}–${r.d.max_level}`),
+          el("span", { class: `rg-status tone-${status.tone}` }, status.text),
+          el("span", { class: "rg-count" }, r.sum.total ? `${r.sum.done}/${r.sum.total} done` : "No quests"),
+        ),
+        questList(r.list, c),
+      ),
+    );
+  }
+
+  return el(
+    "section",
+    { class: "panel", "aria-labelledby": "dungeon-heading" },
+    el("h2", { id: "dungeon-heading" }, "Dungeons"),
+    rows.length
+      ? [el("p", { class: "muted small" }, "Dungeons you can run and still need, for the achievement or for quests. Click one for its quests."), items]
+      : el("p", { class: "muted" }, "Nothing to run right now that this character still needs."),
+  );
+}
+
 function removeSection(c) {
   const message = el("p", { class: "form-message", role: "status", "aria-live": "polite" });
   const passInput = el("input", { name: "passphrase", type: "password", autocomplete: "current-password" });
@@ -272,7 +332,7 @@ async function load() {
 
   const { data: c, error } = await db
     .from("characters")
-    .select(`${SUMMARY_COLUMNS}, equipment, professions`)
+    .select(`${SUMMARY_COLUMNS}, equipment, professions, dungeons_done`)
     .eq("region", target.region)
     .eq("slug", target.slug)
     .maybeSingle();
@@ -294,11 +354,13 @@ async function load() {
       ? db.from("characters").select("id, region, slug, first_name, surname, level").eq("player_id", c.player_id).neq("id", c.id).order("level", { ascending: false })
       : Promise.resolve({ data: [] }),
   ]);
+  await loadDungeonData([c.id]);
 
   document.title = `${fullName(c)} - Forever Roster`;
   sheet.replaceChildren(
     el("div", { class: "sheet-head" }, characterCard(c, { onUpdate: load })),
     el("div", { class: "sheet-grid" }, gearSection(c.equipment), professionsSection(c.professions)),
+    dungeonSection(c),
     questSection(quests.data ?? [], completed.count),
     playerSection(c, players, others.data ?? []),
     removeSection(c),
